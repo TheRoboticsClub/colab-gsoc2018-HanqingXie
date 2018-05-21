@@ -80,7 +80,7 @@ class MyAlgorithm(threading.Thread):
         # optimal_planning.setGoal(dest[0],dest[1])
         # optimal_planning.SetMap(mapIm)
         # optimal_planning.plan(float(runtime), planner, objective, None)
-        fname = '/home/hywel/JdeRobot_ws/Academy/src/navigation_ompl/resources/images/cityLargeBin.ppm'
+        fname = '/home/hywel/JdeRobot_ws/colab-gsoc2018-HanqingXie/resources/images/cityLargeBin.ppm'
         env = Plane2DEnvironment(fname)
 
         if env.plan(gridPos[0],gridPos[1], dest[0],dest[1]):
