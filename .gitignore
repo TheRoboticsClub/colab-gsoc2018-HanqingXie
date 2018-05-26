@@ -6,4 +6,7 @@ cmake-build-debug/*
 /CMakeLists.txt
 .idea/
 .vscode/
+map_image.ppm
+result_demo.ppm
+
 

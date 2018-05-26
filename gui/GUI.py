@@ -51,10 +51,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.playButton.setCheckable(True)
         #self.stopButton.clicked.connect(self.stopClicked)
 
-        plannerList = ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']
+        plannerList = ['RRTstar', 'SORRTstar','BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar']
         self.plannerBox.addItems(plannerList)
-        objectiveList = ['PathClearance', 'PathLength', 'ThresholdPathLength', 'WeightedLengthAndClearanceCombo']
-        self.objectiveBox.addItems(objectiveList)
+        # objectiveList = ['PathClearance', 'PathLength', 'ThresholdPathLength', 'WeightedLengthAndClearanceCombo']
+        # self.objectiveBox.addItems(objectiveList)
 
     def setSensor(self, sensor):
         self.sensor = sensor
@@ -111,7 +111,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def getPathClicked(self):
         pList = []
         pList.append(self.getPlanner())
-        pList.append(self.getObjective())
+        #pList.append(self.getObjective())
         pList.append(self.getRunTime())
         self.getPathSig.emit(pList)
 

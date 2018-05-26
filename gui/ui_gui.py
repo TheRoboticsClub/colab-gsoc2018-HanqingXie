@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(837, 684)
+        MainWindow.resize(837, 621)
         MainWindow.setMinimumSize(QtCore.QSize(660, 370))
         MainWindow.setMaximumSize(QtCore.QSize(1200, 1200))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -88,7 +88,7 @@ class Ui_MainWindow(object):
         self.logoLayout.setSpacing(0)
         self.logoLayout.setObjectName("logoLayout")
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(20, 540, 521, 71))
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(20, 530, 521, 71))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -103,17 +103,6 @@ class Ui_MainWindow(object):
         self.plannerBox = QtWidgets.QComboBox(self.horizontalLayoutWidget)
         self.plannerBox.setObjectName("plannerBox")
         self.horizontalLayout.addWidget(self.plannerBox)
-        self.ObjectiveLabel = QtWidgets.QLabel(self.horizontalLayoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.ObjectiveLabel.sizePolicy().hasHeightForWidth())
-        self.ObjectiveLabel.setSizePolicy(sizePolicy)
-        self.ObjectiveLabel.setObjectName("ObjectiveLabel")
-        self.horizontalLayout.addWidget(self.ObjectiveLabel)
-        self.objectiveBox = QtWidgets.QComboBox(self.horizontalLayoutWidget)
-        self.objectiveBox.setObjectName("objectiveBox")
-        self.horizontalLayout.addWidget(self.objectiveBox)
         self.RunTimeLabel = QtWidgets.QLabel(self.horizontalLayoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -150,7 +139,6 @@ class Ui_MainWindow(object):
         self.mapLabel.setText(_translate("MainWindow", "MAP: double click for selecting your destiny."))
         self.mapLabel_2.setText(_translate("MainWindow", "Manual controler:"))
         self.Plannerlabel.setText(_translate("MainWindow", "planner"))
-        self.ObjectiveLabel.setText(_translate("MainWindow", "objective"))
         self.RunTimeLabel.setText(_translate("MainWindow", "runtime"))
 
 import resources_rc

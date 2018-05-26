@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>837</width>
-    <height>684</height>
+    <height>621</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -282,7 +282,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>540</y>
+      <y>530</y>
       <width>521</width>
       <height>71</height>
      </rect>
@@ -303,22 +303,6 @@
      </item>
      <item>
       <widget class="QComboBox" name="plannerBox"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="ObjectiveLabel">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>objective</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="objectiveBox"/>
      </item>
      <item>
       <widget class="QLabel" name="RunTimeLabel">
