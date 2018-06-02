@@ -6,8 +6,8 @@ import math
 import threading
 import time
 from datetime import datetime
-from ompls.OptimalPlanning import optimalPlanning
-from ompls.Point2DPlanning import Plane2DEnvironment
+#from ompl_solution.OptimalPlanning import optimalPlanning
+from ompl_solution.Point2DPlanning import Plane2DEnvironment
 import sys
 
 time_cycle = 80
@@ -204,8 +204,6 @@ class MyAlgorithm(threading.Thread):
         print theta
         print yaw_dis
 
-        
-
         if (TargetPose[2] == 1):
             if dis<1:
                 print "get target"
@@ -214,7 +212,5 @@ class MyAlgorithm(threading.Thread):
         
         self.vel.setV(v)
         self.vel.setW(w)
-        
 
         #EXAMPLE OF HOW TO SEND INFORMATION TO THE ROBOT ACTUATORS
-        # 
