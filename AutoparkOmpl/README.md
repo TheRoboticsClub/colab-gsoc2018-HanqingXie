@@ -14,7 +14,7 @@ To launch the example, follow the steps below:
   * Execution watching the world: 
 `$ gazebo autopark.world`
 2. Running the practice and the user interface: 
-`$ python2 autopark.py autopark_conf.yml`
+`$ python2 autoparkOmpl.py autopark_conf.yml`
 3. Execution of the automatic evaluator: 
 `$ python2 referee.py referee.yml`
 
