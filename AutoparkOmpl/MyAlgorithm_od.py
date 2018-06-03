@@ -29,12 +29,7 @@ class MyAlgorithm(threading.Thread):
         self.find_path = False
         self.PathId = 0
         self.getTarget = False
-        self.v_old = 0
-        self.w_old = 0
-        self.v = 0
-        self.w = 0
-        self.e_old = [0,0,0]
-        self.e = [0,0,0]
+
 
     def run (self):
 
@@ -68,18 +63,14 @@ class MyAlgorithm(threading.Thread):
     def kill (self):
         self.kill_event.set()
             
-    def findTarget(self,Pose):
-        X = Pose[0]
-        Y = Pose[1]
-        Yaw = Pose[2]
+    def findTarget(self,X,Y,Yaw):
         num = len(self.pathlist[0])-1
         TargetNowX = self.pathlist[0][self.PathId]
         TargetNowY = self.pathlist[1][self.PathId]
         dis = math.sqrt(pow(X-TargetNowX,2)+pow(Y-TargetNowY,2))
-        if dis < 1:
+        if dis < 0.1:
             if num == self.PathId:
-                if dis < 0.2 and abs(Yaw - self.pathlist[2][self.PathId]) < 0.2:
-                    self.getTarget = True
+                self.getTarget = True
             else:
                 self.PathId += 1
             
@@ -93,52 +84,60 @@ class MyAlgorithm(threading.Thread):
     def execute(self):
         #print "Runing"
         #self.find_path = True
-        #self.pathlist = [[13.5,12,10.5,9,7.5],[2.5,1.5,0,-1.5,-2.5],[0,0.5,1,0.5,0]]
         if self.find_path:
             if self.getTarget:
                 print "get Target"
                 self.motors.sendV(0)
                 self.motors.sendW(0)
                 return
-            Pose = [0,0,0]
-            Pose[0] = self.pose3d.getPose3d().x
-            Pose[1] = self.pose3d.getPose3d().y
-            Pose[2] = self.pose3d.getPose3d().yaw
-            TargetPose = self.findTarget(Pose)
+            X = self.pose3d.getPose3d().x
+            Y = self.pose3d.getPose3d().y
+            Yaw = self.pose3d.getPose3d().yaw
+            TargetPose = self.findTarget(X,Y,Yaw)
             print ("pose")
-            print Pose
+            print (X,Y,Yaw)
             print ("target")
             print TargetPose
+            yaw_target = math.atan2(TargetPose[1]-Y,TargetPose[0]-X)
+            
+            yaw_dis = TargetPose[2] - Yaw
+            yaw_target_dis = yaw_target - Yaw
+            dis = math.sqrt(pow(X-TargetPose[0],2)+pow(Y-TargetPose[1],2))
+            print ("yaw_target = %f"%yaw_target)
+            print ("yaw_dis = %f, yaw_target_dis = %f"%(yaw_dis,yaw_target_dis))
 
+            if yaw_dis > 3.14:
+                yaw_dis -= 6.28
+            if yaw_dis < -3.14:
+                yaw_dis += 6.28 
+            if yaw_target_dis > 3.14:
+                yaw_target_dis -= 6.28
+            if yaw_target_dis < -3.14:
+                yaw_target_dis += 6.28 
 
-            self.e[0] = math.cos(Pose[2])*(TargetPose[0] - Pose[0]) + math.sin(Pose[2])*(TargetPose[1] - Pose[1])
-            self.e[1] = -math.sin(Pose[2])*(TargetPose[0] - Pose[0]) + math.cos(Pose[2])*(TargetPose[1] - Pose[1])
-            self.e[2] = TargetPose[2] - Pose[2]
-            print ("e:")
-            print self.e
-            print ("e_old:")
-            print self.e_old
-            self.v = self.v_old + 0.2*(self.e[0] - self.e_old[0]) + 0.01*self.e[0]
-            self.w = self.w_old + 0.5*self.v*(self.e[1] - self.e_old[1]) + 0.2*(self.e[2] - self.e_old[2]) + 0.01*self.e[2]
+            if min(abs(yaw_dis),abs(yaw_target_dis)) > 1 or min(3.14-abs(yaw_target_dis),abs(yaw_target_dis)) > abs(yaw_dis)+0.1:
+                v = 0.05
+                if yaw_target_dis > 1.57:
+                    w = -3.14 + yaw_target_dis
+                elif yaw_target_dis < -1.57:
+                    w = 3.14 + yaw_target_dis
+                else:
+                    w = yaw_target_dis
+                
+            else:
+                if yaw_target_dis > 1.57 or yaw_target_dis < -1.57:
+                    v = -0.2
+                else:
+                    v = 0.2
+                if yaw_dis != 0:
+                    r = dis/yaw_dis
+                    w = v/r
+                else:
+                    w = 0
             #self.pathlist
-            print ("v w: ")
-            print (self.v,self.w)
-            print (self.v_old,self.w_old)
-            if self.v > 0.5:
-                self.w = self.w*0.5/self.v
-                self.v = 0.5
-            if self.v < -0.5:
-                self.w = self.w*-0.5/self.v
-                self.v = -0.5 
-            self.v_old = self.v
-            self.w_old = self.w
-            self.e_old[0] = self.e[0]
-            self.e_old[1] = self.e[1]
-            self.e_old[2] = self.e[2]
-
-            self.motors.sendV(self.v)
-            self.motors.sendW(self.w)
-
+            print (v,w)
+            self.motors.sendV(v)
+            self.motors.sendW(w)
         else:
             #car (6,3)
             #tartget (7.25,-3)
