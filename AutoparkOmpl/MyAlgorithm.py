@@ -222,9 +222,6 @@ class MyAlgorithm(threading.Thread):
             plt.show()
             self.find_path = True
 
-            
-        
-        
         #laser_data = self.laser2.getLaserData()
         #laser = self.parse_laser_data(laser_data)
         #print laser
@@ -315,80 +312,4 @@ class MyAlgorithm(threading.Thread):
             f=interpolate.interp1d(x,y,kind=kind)  
             ynew=f(xnew)
             plt.plot(xnew,ynew,label=str(kind))
-            plt.savefig("figure3.jpg")  
-
-
-    def sub_spl(self,x,y):  
-        if len(x) == 2:  
-            return (y[1] -y[0])/(x[1] - x[0])  
-        return (self.sub_spl(x[1:],y[1:]) - self.sub_spl(x[:len(x)-1],y[:len(y) - 1]))/(x[len(x) - 1] - x[0])  
-    def three_spline_trax(self,tup_x,tup_y,s0,sn):  
-        trax = []  
-        h = []  
-        for i in range(len(tup_x) - 1):  
-            h.append(tup_x[i+1] - tup_x[i])  
-        d = [0 for i in  range(len(tup_x))]  
-        d[0] = 6/h[0] * (self.sub_spl(tup_x[:2],tup_y[:2]) - s0)  
-        d [-1] = 6/h[-1] * (sn - self.sub_spl(tup_x[-2:],tup_y[-2:]))  
-        u = [0 for i in  range(len(tup_x)-1)]  
-        for j in  range(1,len(tup_x) - 1):  
-            d[j] = 6 * self.sub_spl(tup_x[j-1:j+2],tup_y[j-1:j+2])  
-            u[j] = h[j-1]/(h[j-1] + h[j])  
-        l =  [1-i for i in u]  
-        u.append(1) #un = 1  
-        for i in range(len(tup_x)):  
-            trax.append([0 for j in range(len(tup_x))])  
-            trax[i][i] = 2  
-    
-        for i in range(len(tup_x) - 1):  
-            trax[i][i+1] = l[i]  
-            trax[i+1][i] = u[i+1]  
-            trax[i].append(d[i])  
-        trax[-1].append(d[-1])  
-        return trax,h  
-
-
-    def return_trax(self,trax,m,n,num):  
-        if num is 1:  
-            self.last_trax.append(trax[n-1][n-1:])  
-            return   
-        else:  
-            Max = abs(trax[0][0])  
-            t1 = 0  
-            for i in  range(1,m):  
-                if abs(trax[i][0]) > Max:  
-                    Max = trax[i][0]  
-                    t1 = i  
-            trax[0],trax[t1] = trax[t1],trax[0]  
-            tmp2 = []  
-            self.last_trax.append(trax[0])  
-            for i in range(1,n):  
-                tmp = -trax[i][0]/trax[0][0]  
-                def cal(tup):  
-                    return tup[0] + tup[1] * tmp  
-                tmp2.append(map(cal,zip(trax[i][1:],trax[0][1:])))  
-            trax = tmp2  
-            return self.return_trax(trax,m-1,n-1,num-1)  
-    
-    def s_um(self,tup):  
-        return reduce(lambda x,y:x*y,tup)  
-    
-
-    def calculate(self,trax,m):   
-        l = [0 for i in range(m)]  
-        for i in range(m-1,-1,-1):  
-            if i == m-1:  
-                l[i] = trax[i][m-i]/trax[i][0]  
-            else:  
-                tmp3 = trax[i][m-i]  
-                tmp3 -= sum(map(self.s_um,zip(l[i:],trax[i][:m-i])))  
-                l[i] = tmp3/trax[i][0]  
-        return l  
-    
-    def res(self,l,tup_x1,tup_y1,h):  
-        def outcome(x):  
-            for j in  range(len(tup_x1) - 1):  
-                if tup_x1[j] <= x <= tup_x1[j+1]:  
-                    sum_func = l[j]*(tup_x1[j+1] - x)**3/(6*h[j]) + l[j+1]*(x - tup_x1[j])**3/(6*h[j])+(tup_y1[j] - l[j]/6*h[j]**2)*(tup_x1[j+1] - x)/h[j] + (tup_y1[j+1]-l[j+1]/6*h[j]**2)*(x - tup_x1[j])/h[j]  
-                    return sum_func  
-        return outcome  
+            plt.savefig("figure3.jpg") 
