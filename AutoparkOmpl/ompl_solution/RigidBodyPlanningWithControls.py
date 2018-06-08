@@ -164,8 +164,7 @@ class RigidBodyPlanning:
                 # t_y = p.getControl(i)[1]
                 # t_yaw = p.getControl(i)[2]
 
-                # print ('t_x = %f, t_y = %f, t_yaw = %f ' %(t_x,t_y,t_yaw))
-            
+                # print ('t_x = %f, t_y = %f, t_yaw = %f ' %(t_x,t_y,t_yaw)
 
             return pathlist
         else:
