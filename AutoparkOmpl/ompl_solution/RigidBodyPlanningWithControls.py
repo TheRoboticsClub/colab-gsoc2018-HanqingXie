@@ -69,7 +69,7 @@ class RigidBodyPlanning:
         # r = math.sqrt((x-0)*(x-0) + (y-0)*(y-0)) - 4
         #print state
         tmp = True
-        if y < -5:
+        if y < -4 and y > 5:
            tmp = False
         elif y < -0.5:
             if x > 12 or x < 5.5:
@@ -92,8 +92,8 @@ class RigidBodyPlanning:
         high = max(start_x, start_y, goal_x, goal_y)
         print low
         print high
-        bounds.setLow(-20)
-        bounds.setHigh(30)
+        bounds.setLow(-8)
+        bounds.setHigh(20)
         self.space.setBounds(bounds)
 
         # create a control space

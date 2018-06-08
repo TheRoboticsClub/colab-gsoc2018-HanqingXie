@@ -158,7 +158,6 @@ class MyAlgorithm(threading.Thread):
             # x, y = np.meshgrid(x,y)
             # plt.contour(x, y, x**2 + y**2, [16])
             plt.show()
-
             self.find_path = True
             
         
