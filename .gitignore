@@ -9,4 +9,4 @@ cmake-build-debug/*
 map_image.ppm
 result_demo.ppm
 
-
+*.jpg

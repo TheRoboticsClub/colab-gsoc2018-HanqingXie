@@ -6,9 +6,10 @@ import jderobot
 import math
 import cv2
 from math import pi as pi
-from ompl_solution.RigidBodyPlanningWithControls import RigidBodyPlanning
-from ompl_solution.control import noHolomonicControl
-from ompl_solution.smoothPath import smooth
+
+from navigation.ompl.RigidBodyPlanningWithControls import RigidBodyPlanning
+from navigation.control.control import noHolomonicControl
+from navigation.path_smooth.smoothPath import smooth
 import matplotlib.pyplot as plt
 from scipy import interpolate  
 
