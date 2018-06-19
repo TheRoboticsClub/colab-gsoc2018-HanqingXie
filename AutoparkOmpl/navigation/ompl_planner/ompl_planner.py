@@ -21,7 +21,7 @@ class ompl_planner:
         self.goal_y = goal_y
         self.goal_yaw = goal_yaw
         self.plannerType = plannerType
-        self.simpleSetup()
+        self.simpleSetupControl()
 
     def isStateValid(self, spaceInformation, state):
         # perform collision checking or check if other constraints are
@@ -50,7 +50,7 @@ class ompl_planner:
         state.setY( start.getY() + control[0] * duration * math.sin(start.getYaw()) )
         state.setYaw(start.getYaw() + control[1] * duration)
     
-    def simpleSetup(self):
+    def simpleSetupControl(self):
         self.setSpace()
         self.setPose()
         self.setPlanner()
@@ -81,8 +81,8 @@ class ompl_planner:
         self.cspace = oc.RealVectorControlSpace(self.space, 2)
         # set the bounds for the control space
         cbounds = ob.RealVectorBounds(2)
-        cbounds.setLow(0,-3)
-        cbounds.setHigh(0,3)
+        cbounds.setLow(0,-1.5)
+        cbounds.setHigh(0,1.5)
         cbounds.setLow(1,-3)
         cbounds.setHigh(1,3)
         self.cspace.setBounds(cbounds)
