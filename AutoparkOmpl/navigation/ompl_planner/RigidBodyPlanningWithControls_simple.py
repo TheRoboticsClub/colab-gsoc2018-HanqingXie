@@ -82,8 +82,8 @@ class RigidBodyPlanning:
         bounds = ob.RealVectorBounds(2)
         low = min(start_x, start_y, goal_x, goal_y)
         high = max(start_x, start_y, goal_x, goal_y)
-        print low
-        print high
+        print (low)
+        print (high)
         bounds.setLow(-8)
         bounds.setHigh(20)
         self.space.setBounds(bounds)
@@ -157,7 +157,6 @@ class RigidBodyPlanning:
                 # t_yaw = p.getControl(i)[2]
 
                 # print ('t_x = %f, t_y = %f, t_yaw = %f ' %(t_x,t_y,t_yaw)
-
             return pathlist
         else:
             print ("can't find path")

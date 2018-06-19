@@ -7,7 +7,7 @@ import math
 import cv2
 from math import pi as pi
 
-from navigation.ompl.RigidBodyPlanningWithControls import RigidBodyPlanning
+from navigation.ompl_planner.ompl_planner import ompl_planner
 from navigation.control.control import noHolomonicControl
 from navigation.path_smooth.smoothPath import smooth
 import matplotlib.pyplot as plt
@@ -167,8 +167,8 @@ class MyAlgorithm(threading.Thread):
             goalY = -3
             goalYaw = 0
             print (startX, startY, startYaw, goalX, goalY, goalYaw)
-            ompl_sol = RigidBodyPlanning()
-            self.pathlist = ompl_sol.plan(startX, startY, startYaw, goalX, goalY, goalYaw)
+            ompl_sol = ompl_planner(None, startX, startY, startYaw, goalX, goalY, goalYaw, "syclopest")
+            self.pathlist = ompl_sol.solve()
             #print self.pathlist
 
             if self.pathlist[0][0] > startX:

@@ -99,10 +99,10 @@ class smooth:
             vector2 = [x2-x1,y2-y1]
             yaw1 = math.atan2(vector1[1],vector1[0])
             yaw2 = math.atan2(vector2[1],vector2[0])
-            print("yaw1")
-            print yaw1
-            print("yaw2")
-            print yaw2
+            print ("yaw1")
+            print (yaw1)
+            print ("yaw2")
+            print (yaw2)
             yawtmp = (yaw2+yaw1)/2
             if (i==0):
                 yawtmp = self.setYaw(yawtmp,start[2])
