@@ -188,41 +188,11 @@ class MyAlgorithm(threading.Thread):
                 y2 = y1 + math.sin(yaw)
                 plt.plot([x1,x2],[y1,y2])
             plt.savefig("figure1.jpg") 
-            # x = y = np.arange(-5, 5, 0.1)
-            # x, y = np.meshgrid(x,y)
-            # plt.contour(x, y, x**2 + y**2, [16])
 
             self.pathlist = self.smooth.Floyd(self.pathlist)
             self.pathlist = self.smooth.checkYaw(self.pathlist, [startX,startY,startYaw])
             num = len(self.pathlist[0])
-            # num = len(self.pathlist[0])
-            # for i in range(num-1):
-            #     if (i == 0):
-            #         x0 = startX
-            #         y0 = startY
-            #     else:
-            #         x0 = self.pathlist[0][i-1]
-            #         y0 = self.pathlist[1][i-1]
-            #     x1 = self.pathlist[0][i]
-            #     y1 = self.pathlist[1][i]
-            #     x2 = self.pathlist[0][i+1]
-            #     y2 = self.pathlist[1][i+1]
-            #     vector1 = [x1-x0,y1-y0]
-            #     vector2 = [x2-x1,y2-y1]
-            #     yaw1 = math.atan2(vector1[1],vector1[0])
-            #     yaw2 = math.atan2(vector2[1],vector2[0])
-            #     print("yaw1")
-            #     print yaw1
-            #     print("yaw2")
-            #     print yaw2
-            #     yawtmp = (yaw2+yaw1)/2
-            #     if (i==0):
-            #         yawtmp = self.setYaw(yawtmp,startYaw)
-            #     else:
-            #         yawtmp = self.setYaw(yawtmp,self.pathlist[2][i-1])
-            #     print "yawtmp"
-            #     print yawtmp
-            #     self.pathlist[2][i] = yawtmp
+
                 
             plt.figure(2)
             plt.plot(self.pathlist[0], self.pathlist[1])
