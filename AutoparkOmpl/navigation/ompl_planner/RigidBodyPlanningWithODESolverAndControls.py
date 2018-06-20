@@ -201,13 +201,13 @@ class RigidBodyPlanningWithODESolverAndControls:
                 pathlist[1].append(y)
                 pathlist[2].append(yaw)
                 # print ('x = %f, y = %f, yaw = %f ' %(x,y,yaw))
-                t_x = p.getControl(i)[0]
-                t_y = p.getControl(i)[1]
-                t_yaw = p.getControl(i)[2]
-                pathlist[3].append(t_x)
-                pathlist[4].append(t_y)
-                pathlist[5].append(t_yaw)
-                # print ('t_x = %f, t_y = %f, t_yaw = %f ' %(t_x,t_y,t_yaw)
+                v = p.getControl(i)[0]
+                w = p.getControl(i)[1]
+                t = p.getControlDuration(i)
+                pathlist[3].append(v)
+                pathlist[4].append(w)
+                pathlist[5].append(t)
+                # print ('v = %f, w = %f, t = %f ' %(v,w,x))
             return pathlist
         else:
             print ("can't find path")
