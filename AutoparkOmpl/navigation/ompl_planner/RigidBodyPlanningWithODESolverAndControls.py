@@ -52,46 +52,71 @@ import matplotlib.pyplot as plt
 ## @cond IGNORE
 # a decomposition is only needed for SyclopRRT and SyclopEST
 class RigidBodyPlanningWithODESolverAndControls:
-    def __init__(self):
-        self.a = 0
+    def __init__(self, costMap, start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw, plannerType):
+        self.costMap = costMap
+        self.start_x = start_x
+        self.start_y = start_y
+        self.start_yaw = start_yaw
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.goal_yaw = goal_yaw
+        self.plannerType = plannerType
+        self.simpleSetupControl()
 
     def kinematicCarODE(self, q, u, qdot):
         theta = q[2]
         carLength = 5
         qdot[0] = u[0] * cos(theta)
         qdot[1] = u[0] * sin(theta)
-        qdot[2] = u[0] * tan(u[1]) #/ carLength
+        qdot[2] = u[0] * tan(u[1]) / carLength
 
     def isStateValid(self, spaceInformation, state):
         # perform collision checking or check if other constraints are
         # satisfied
-        x = state.getX()
-        y = state.getY()
-        # r = math.sqrt((x-0)*(x-0) + (y-0)*(y-0)) - 4
-        #print state
-        tmp = True
-        if y < -4 and y > 5:
-           tmp = False
-        elif y < -0.5:
-            if x > 12 or x < 5.5:
-                tmp = False 
-        
+        wx = state.getX()
+        wy = state.getY()
+        if not self.costMap:
+            tmp = True
+            if wy < -4 and wy > 5:
+                tmp = False
+            elif wy < -0.5:
+                if wx > 12 or wx < 5.5:
+                    tmp = False 
+        else:
+            mPoint = self.costMap.worldToMap(wx, wy)
+            cost = self.costMap.getCost(mPoint[0],mPoint[1])
+            if cost >= 1:
+                tmp = False
+            else:
+                tmp = True
         return spaceInformation.satisfiesBounds(state) and tmp
+    
+    def simpleSetupControl(self):
+        self.setSpace()
+        self.setProblem()
+        self.setPlanner()
 
-
-    def plan(self, start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw, ):
-        # construct the state space we are planning in
+    def setSpace(self):
         self.space = ob.SE2StateSpace()
 
         # set the bounds for the R^2 part of SE(2)
-        bounds = ob.RealVectorBounds(2)
-        low = min(start_x, start_y, goal_x, goal_y)
-        high = max(start_x, start_y, goal_x, goal_y)
-        print (low)
-        print (high)
-        bounds.setLow(-8)
-        bounds.setHigh(20)
-        self.space.setBounds(bounds)
+        self.bounds = ob.RealVectorBounds(2)
+        if not self.costMap:
+            self.bounds.setLow(-8)
+            self.bounds.setHigh(20)
+        else:
+            ox = self.costMap.getOriginX()
+            oy = self.costMap.getOriginY()
+            size_x = self.costMap.getSizeInMetersX()
+            size_y = self.costMap.getSizeInMetersY()
+            low = min(ox, oy)
+            high = max(ox+size_x, oy+size_y)
+            print (low)
+            print (high)
+            self.bounds.setLow(low)
+            self.bounds.setHigh(high)
+
+        self.space.setBounds(self.bounds)
 
         # create a control space
         self.cspace = oc.RealVectorControlSpace(self.space, 2)
@@ -100,8 +125,8 @@ class RigidBodyPlanningWithODESolverAndControls:
         cbounds = ob.RealVectorBounds(2)
         cbounds.setLow(0,-1.5)
         cbounds.setHigh(0,1.5)
-        cbounds.setLow(1,-2.5)
-        cbounds.setHigh(1,2.5)
+        cbounds.setLow(1,-3)
+        cbounds.setHigh(1,3)
         self.cspace.setBounds(cbounds)
 
         # define a simple setup class
@@ -113,43 +138,60 @@ class RigidBodyPlanningWithODESolverAndControls:
         propagator = oc.ODESolver.getStatePropagator(odeSolver)
         self.ss.setStatePropagator(propagator)
 
+    def setProblem(self):
         # create a start state
         start = ob.State(self.space)
-        start().setX(start_x)
-        start().setY(start_y)
-        start().setYaw(start_yaw)
-
+        start().setX(self.start_x)
+        start().setY(self.start_y)
+        start().setYaw(self.start_yaw)
         # create a goal state
         goal = ob.State(self.space)
-        goal().setX(goal_x)
-        goal().setY(goal_y)
-        goal().setYaw(goal_yaw)
+        goal().setX(self.goal_x)
+        goal().setY(self.goal_y)
+        goal().setYaw(self.goal_yaw)
 
         # set the start and goal states
         self.ss.setStartAndGoalStates(start, goal, 0.05)
 
-        #(optionally) set planner
+    def setPlanner(self):
+        # (optionally) set planner
         self.si = self.ss.getSpaceInformation()
-        #planner = oc.RRT(self.si)
-        #planner = oc.EST(self.si)
-        planner = oc.KPIECE1(self.si) # this is the default
-        # SyclopEST and SyclopRRT require a decomposition to guide the search
-        #decomp = MyDecomposition(32, bounds)
-        #planner = oc.SyclopEST(self.si, decomp)
-        #planner = oc.SyclopRRT(self.si, decomp)
+
+        if self.plannerType.lower() == "rrt":
+            planner = oc.RRT(self.si)
+        elif self.plannerType.lower() == "est":
+            planner = oc.EST(self.si)
+        elif self.plannerType.lower() == "kpiece1":
+            planner = oc.KPIECE1(self.si)
+        elif self.plannerType.lower() == "syclopest":
+            # SyclopEST and SyclopRRT require a decomposition to guide the search
+            decomp = MyDecomposition(32, self.bounds)
+            planner = oc.SyclopEST(self.si, decomp)
+        elif self.plannerType.lower() == "sycloprrt":
+            # SyclopEST and SyclopRRT require a decomposition to guide the search
+            decomp = MyDecomposition(32, self.bounds)
+            planner = oc.SyclopRRT(self.si, decomp)
+        else:
+            OMPL_ERROR("Planner-type is not implemented in ompl control function.")
+            decomp = MyDecomposition(32, self.bounds)
+            planner = oc.SyclopEST(self.si, decomp)
+
         self.ss.setPlanner(planner)
         # (optionally) set propagation step size
         self.si.setPropagationStepSize(.05)
 
+    def solve(self, runtime=None):
+        if not runtime:
+            runtime = 100
         # attempt to solve the problem
-        solved = self.ss.solve(100.0)
+        solved = self.ss.solve(runtime)
 
         if solved:
             # print the path to screen
             p = self.ss.getSolutionPath()
-            print("Found solution:\n%s" % self.ss.getSolutionPath().asGeometric().printAsMatrix())
-            
-            pathlist = [[] for i in range(3)]
+            print("Found solution:\n%s" % self.ss.getSolutionPath().printAsMatrix())
+            #p.interpolate()
+            pathlist = [[] for i in range(6)]
             #print p.getControlCount() 
             for i in range(p.getControlCount()):
                 x = p.getState(i+1).getX()
@@ -158,10 +200,33 @@ class RigidBodyPlanningWithODESolverAndControls:
                 pathlist[0].append(x)
                 pathlist[1].append(y)
                 pathlist[2].append(yaw)
+                # print ('x = %f, y = %f, yaw = %f ' %(x,y,yaw))
+                t_x = p.getControl(i)[0]
+                t_y = p.getControl(i)[1]
+                t_yaw = p.getControl(i)[2]
+                pathlist[3].append(t_x)
+                pathlist[4].append(t_y)
+                pathlist[5].append(t_yaw)
+                # print ('t_x = %f, t_y = %f, t_yaw = %f ' %(t_x,t_y,t_yaw)
             return pathlist
         else:
             print ("can't find path")
             return 0
+    
+    def updateMap(self, costMap):
+        self.costMap = costMap
+
+    def updatePose(self,start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw):
+        self.start_x = start_x
+        self.start_y = start_y
+        self.start_yaw = start_yaw
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.goal_yaw = goal_yaw
+    
+    def updatePlannerType(self, plannerType):
+        self.plannerType = plannerType
+
 
 class MyDecomposition(oc.GridDecomposition):
     def __init__(self, length, bounds):
@@ -176,8 +241,9 @@ class MyDecomposition(oc.GridDecomposition):
 
 if __name__ == "__main__":
     
-    planner = RigidBodyPlanningWithODESolverAndControls()
-    pathlist = planner.plan(6,3,0,7.25,-3,0)
+    planner = RigidBodyPlanningWithODESolverAndControls(None, 6,3,0,7.25,-3,0, 'kpiece1')
+    pathlist = planner.solve()
+
     plt.figure(1)
     plt.plot(pathlist[0], pathlist[1])
     num = len(pathlist[0])

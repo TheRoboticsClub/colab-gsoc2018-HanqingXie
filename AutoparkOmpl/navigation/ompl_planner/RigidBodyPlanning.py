@@ -52,107 +52,146 @@ import matplotlib.pyplot as plt
 ## @cond IGNORE
 # a decomposition is only needed for SyclopRRT and SyclopEST
 class RigidBodyPlanning:
-    def __init__(self):
-        self.a = 0
+    def __init__(self,costMap, start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw, plannerType):
+        self.costMap = costMap
+        self.start_x = start_x
+        self.start_y = start_y
+        self.start_yaw = start_yaw
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.goal_yaw = goal_yaw
+        self.plannerType = plannerType
+        self.simpleSetupControl()
+
 
     def isStateValid(self, state):
         # perform collision checking or check if other constraints are
         # satisfied
-        x = state.getX()
-        y = state.getY()
-        # r = math.sqrt((x-0)*(x-0) + (y-0)*(y-0)) - 4
-        #print state
-        tmp = True
-        if y < -4 and y > 5:
-           tmp = False
-        elif y < -0.5:
-            if x > 12 or x < 5.5:
-                tmp = False 
-        
+        wx = state.getX()
+        wy = state.getY()
+        if not self.costMap:
+            tmp = True
+            if wy < -4 and wy > 5:
+                tmp = False
+            elif wy < -0.5:
+                if wx > 12 or wx < 5.5:
+                    tmp = False 
+        else:
+            mPoint = self.costMap.worldToMap(wx, wy)
+            cost = self.costMap.getCost(mPoint[0],mPoint[1])
+            if cost >= 1:
+                tmp = False
+            else:
+                tmp = True
         return tmp
+    
+    def simpleSetupControl(self):
+        self.setSpace()
+        self.setProblem()
+        self.setPlanner()
 
-
-    def plan(self, start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw, ):
+    def setSpace(self):
         # construct the state space we are planning in
         self.space = ob.SE2StateSpace()
 
         # set the bounds for the R^2 part of SE(2)
-        bounds = ob.RealVectorBounds(2)
-        low = min(start_x, start_y, goal_x, goal_y)
-        high = max(start_x, start_y, goal_x, goal_y)
-        print (low)
-        print (high)
-        bounds.setLow(-8)
-        bounds.setHigh(20)
-        self.space.setBounds(bounds)
-
+        self.bounds = ob.RealVectorBounds(2)
+        if not self.costMap:
+            self.bounds.setLow(-8)
+            self.bounds.setHigh(20)
+        else:
+            ox = self.costMap.getOriginX()
+            oy = self.costMap.getOriginY()
+            size_x = self.costMap.getSizeInMetersX()
+            size_y = self.costMap.getSizeInMetersY()
+            low = min(ox, oy)
+            high = max(ox+size_x, oy+size_y)
+            print (low)
+            print (high)
+            self.bounds.setLow(low)
+            self.bounds.setHigh(high)
+        self.space.setBounds(self.bounds)
 
         # define a simple setup class
         self.ss = og.SimpleSetup(self.space)
         self.ss.setStateValidityChecker(ob.StateValidityCheckerFn(self.isStateValid))
-        
+
+    def setProblem(self):
         # create a start state
         start = ob.State(self.space)
-        start().setX(start_x)
-        start().setY(start_y)
-        #start().setYaw(start_yaw)
+        start().setX(self.start_x)
+        start().setY(self.start_y)
+        start().setYaw(self.start_yaw)
 
         # create a goal state
         goal = ob.State(self.space)
-        goal().setX(goal_x)
-        goal().setY(goal_y)
-        #goal().setYaw(goal_yaw)
+        goal().setX(self.goal_x)
+        goal().setY(self.goal_y)
+        goal().setYaw(self.goal_yaw)
 
         # set the start and goal states
         self.ss.setStartAndGoalStates(start, goal, 0.05)
-
-        # (optionally) set planner
+    
+    def setPlanner(self):
         self.si = self.ss.getSpaceInformation()
-        planner = og.RRTstar(self.si)
+        if self.plannerType.lower() == "bitstar":
+            planner = og.BITstar(self.si)
+        elif self.plannerType.lower() == "fmtstar":
+            planner = og.FMT(self.si)
+        elif self.plannerType.lower() == "informedrrtstar":
+            planner = og.InformedRRTstar(self.si)
+        elif self.plannerType.lower() == "prmstar":
+            planner = og.PRMstar(self.si)
+        elif self.plannerType.lower() == "rrtstar":
+            planner = og.RRTstar(self.si)
+        elif self.plannerType.lower() == "sorrtstar":
+            planner = og.SORRTstar(self.si)
+        else:
+            OMPL_ERROR("Planner-type is not implemented in allocation function.")
+            planner = og.RRTstar(self.si)
         self.ss.setPlanner(planner)
 
-
+    def solve(self, runtime = None ):
+        if not runtime:
+            runtime = 1
         # attempt to solve the problem
-        solved = self.ss.solve(1.0)
+        solved = self.ss.solve(runtime)
 
         if solved:
             self.ss.simplifySolution()
             # print the path to screen
             p = self.ss.getSolutionPath()
-            #print("Found solution:\n%s" % ss.getSolutionPath().asGeometric().printAsMatrix())
             print("Found solution:\n%s" % self.ss.getSolutionPath().printAsMatrix())
             #p.interpolate()
-            pathlist = [[] for i in range(2)]
+            pathlist = [[] for i in range(3)]
 
             for i in range(p.getStateCount()):
                 x = p.getState(i).getX()
                 y = p.getState(i).getY()
+                yaw = p.getState(i).getYaw()
                 pathlist[0].append(x)
                 pathlist[1].append(y)
+                pathlist[2].append(yaw)
             return pathlist
         else:
             print ("can't find path")
             return 0
 
-class MyDecomposition(oc.GridDecomposition):
-    def __init__(self, length, bounds):
-        super(MyDecomposition, self).__init__(length, 2, bounds)
-    def project(self, s, coord):
-        coord[0] = s.getX()
-        coord[1] = s.getY()
-    def sampleFullState(self, sampler, coord, s):
-        sampler.sampleUniform(s)
-        s.setXY(coord[0], coord[1])
-## @endcond
-
 
 if __name__ == "__main__":
     
     
-    planner = RigidBodyPlanning()
-
-    pathlist = planner.plan(6,3,0,7.25,-3,0)
+    planner = RigidBodyPlanning(None, 6,3,0,7.25,-3,0, 'rrtstar')
+    pathlist = planner.solve()
 
     plt.figure(1)
     plt.plot(pathlist[0], pathlist[1])
+    num = len(pathlist[0])
+    for i in range(num):
+        x1 = pathlist[0][i]
+        y1 = pathlist[1][i]
+        yaw = pathlist[2][i]
+        x2 = x1 + 0.5*cos(yaw)
+        y2 = y1 + 0.5*sin(yaw)
+        plt.plot([x1,x2],[y1,y2])
     plt.show()

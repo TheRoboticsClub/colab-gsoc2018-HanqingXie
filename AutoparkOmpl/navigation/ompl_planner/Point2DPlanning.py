@@ -48,54 +48,83 @@ class Plane2DEnvironment:
     def __init__(self, ppm_file):
         self.ppm_ = ou.PPM()
         self.ppm_.loadFile(ppm_file)
-        space = ob.RealVectorStateSpace()
-        space.addDimension(0.0, self.ppm_.getWidth())
-        space.addDimension(0.0, self.ppm_.getHeight())
+        self.space = ob.RealVectorStateSpace()
+        self.space.addDimension(0.0, self.ppm_.getWidth())
+        self.space.addDimension(0.0, self.ppm_.getHeight())
         self.maxWidth_ = self.ppm_.getWidth() - 1
         self.maxHeight_ = self.ppm_.getHeight() - 1
-        self.ss_ = og.SimpleSetup(space)
+
+        self.si = ob.SpaceInformation(self.space)
 
         # set state validity checking for this space
-        self.ss_.setStateValidityChecker(ob.StateValidityCheckerFn(
+        self.si.setStateValidityChecker(ob.StateValidityCheckerFn(
             partial(Plane2DEnvironment.isStateValid, self)))
-        space.setup()
-        self.ss_.getSpaceInformation().setStateValidityCheckingResolution(1.0 / space.getMaximumExtent())
-        #      self.ss_.setPlanner(og.RRTConnect(self.ss_.getSpaceInformation()))
+        self.si.setup()
+        self.si.setStateValidityCheckingResolution(1.0 / self.space.getMaximumExtent())
+        #self.ss_.setPlanner(og.RRTConnect(self.ss_.getSpaceInformation()))
 
     def plan(self, start_row, start_col, goal_row, goal_col,plannerType,runtime):
-        if not self.ss_:
+        if not self.si:
             return False
-        start = ob.State(self.ss_.getStateSpace())
+        start = ob.State(self.space)
         start()[0] = start_row
         start()[1] = start_col
-        goal = ob.State(self.ss_.getStateSpace())
+        goal = ob.State(self.space)
         goal()[0] = goal_row
         goal()[1] = goal_col
         # Create a problem instance
-        self.ss_.setStartAndGoalStates(start, goal)
+
+        self.pdef = ob.ProblemDefinition(self.si)
+        # Set the start and goal states
+        self.pdef.setStartAndGoalStates(start, goal)
+
+        self.planner = self.allocatePlanner(self.si, plannerType)
+        self.planner.setProblemDefinition(self.pdef)
+        # perform setup steps for the planner
+        self.planner.setup()
+        # print the settings for this space
+        print(self.si.settings())
         # generate a few solutions; all will be added to the goal
         for i in range(5):
-            self.ss_.solve()
-            p = self.ss_.getSolutionPath()
+            self.solved = self.planner.solve(runtime)
+            p = self.pdef.getSolutionPath()
             print("Found solution:\n%s" % p)
-        ns = self.ss_.getProblemDefinition().getSolutionCount()
+        ns = self.planner.getProblemDefinition().getSolutionCount()
         print("Found %d solutions" % ns)
 
-        if self.ss_.haveSolutionPath():
-            self.ss_.simplifySolution()
-            p = self.ss_.getSolutionPath()
-            ps = og.PathSimplifier(self.ss_.getSpaceInformation())
-            ps.simplifyMax(p)
-            ps.smoothBSpline(p)
+        if self.solved:
+            # get the goal representation from the problem definition (not the same as the goal state)
+            # and inquire about the found path
+            path = self.pdef.getSolutionPath()
+            print("Found solution:\n%s" % path)
             return True
         else:
+            print("No solution found")
             return False
 
         
+    def allocatePlanner(self,si,plannerType):
+        if plannerType.lower() == "bitstar":
+            return og.BITstar(si)
+        elif plannerType.lower() == "fmtstar":
+            return og.FMT(si)
+        elif plannerType.lower() == "informedrrtstar":
+            return og.InformedRRTstar(si)
+        elif plannerType.lower() == "prmstar":
+            return og.PRMstar(si)
+        elif plannerType.lower() == "rrtstar":
+            return og.RRTstar(si)
+        elif plannerType.lower() == "sorrtstar":
+            return og.SORRTstar(si)
+        else:
+            OMPL_ERROR("Planner-type is not implemented in allocation function.");
+
+
     def recordSolution(self):
-        if not self.ss_ or not self.ss_.haveSolutionPath():
+        if not self.si:
             return
-        p = self.ss_.getSolutionPath()
+        p = self.pdef.getSolutionPath()
+        print("Found solution:\n%s" % p)
         p.interpolate()
         for i in range(p.getStateCount()):
             w = min(self.maxWidth_, int(p.getState(i)[0]))
@@ -106,9 +135,9 @@ class Plane2DEnvironment:
             c.blue = 0
 
     def getPath(self):
-        if not self.ss_ or not self.ss_.haveSolutionPath():
-             return
-        p = self.ss_.getSolutionPath()
+        # if not self.si:
+        #     return
+        p = self.pdef.getSolutionPath()
         p.interpolate()
         pathlist = [[] for i in range(2)]
         for i in range(p.getStateCount()):
@@ -119,7 +148,7 @@ class Plane2DEnvironment:
         return pathlist
 
     def save(self, filename):
-        if not self.ss_:
+        if not self.si:
             return
         self.ppm_.saveFile(filename)
 
