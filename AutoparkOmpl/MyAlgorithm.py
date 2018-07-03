@@ -10,6 +10,7 @@ from math import pi as pi
 from navigation.ompl_planner.ompl_planner import ompl_planner
 from navigation.control.control import noHolomonicControl
 from navigation.path_smooth.smoothPath import smooth
+from navigation.map.occGridMap import occGridMap
 import matplotlib.pyplot as plt
 from scipy import interpolate  
 
@@ -33,17 +34,11 @@ class MyAlgorithm(threading.Thread):
 
         self.control = noHolomonicControl()
         self.smooth = smooth()
-        self
 
         self.find_path = False
-        # self.PathId = 0
         self.getTarget = False
-        # self.v_old = 0
-        # self.w_old = 0
-        # self.v = 0
-        # self.w = 0
-        # self.e_old = [0,0,0]
-        # self.e = [0,0,0]
+
+        self.buildMap = occGridMap()
 
         
 
@@ -84,6 +79,7 @@ class MyAlgorithm(threading.Thread):
         #print "Runing"
         #self.find_path = True
         #self.pathlist = [[13.5,12,10.5,9,7.5],[2.5,1.5,0,-1.5,-2.5],[0,0.5,1,0.5,0]]
+        '''
         if self.find_path:
             if self.getTarget:
                 print "get Target"
@@ -154,25 +150,28 @@ class MyAlgorithm(threading.Thread):
             
             self.control.setPath(self.pathlist)
             self.find_path = True
-            
-        #laser_data = self.laser2.getLaserData()
-        #laser = self.parse_laser_data(laser_data)
+        
+        '''
+        pose = [0,0,0]
+        pose[0] = self.pose3d.getPose3d().x
+        pose[1] = self.pose3d.getPose3d().y
+        pose[2] = self.pose3d.getPose3d().yaw
+        laser_data = self.laser3.getLaserData()
+        laser = self.parse_laser_data(laser_data)
         #print laser
-        
-        #EXAMPLE OF HOW TO SEND INFORMATION TO THE ROBOT ACTUATORS
-        #self.motors.sendV(10)
-        #self.motors.sendW(5)
-        
-        # TODO
+        self.buildMap.registerScan(pose,1,laser)
+        self.buildMap.drawMap()
+
     
     def parse_laser_data(self, laser_data):
         laser = []
         for i in range(laser_data.numLaser):
             dist = laser_data.distanceData[i]/1000.0
             angle = math.radians(i)
-            laser += [(dist, angle)]
+            laser.append([dist])#[(dist, angle)]
         return laser
 
-    
-        
+#laser2 ~ 0 front      
+# laser1 ~ 2 
+# laser3 ~ 1
 #region floyd

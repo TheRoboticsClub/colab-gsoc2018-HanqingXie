@@ -1,14 +1,16 @@
 import numpy as np
 import math
+from math import cos,sin,tan,pow,pi
 
 class costmap_2d:
-    def __init__(self,cells_size_x, cells_size_y, resolution, origin_x, origin_y, default_value):
-        self.size_x_ = cells_size_x
+    def __init__(self,cells_size_x, cells_size_y, resolution, origin_x = 0, origin_y = 0, default_value = 0):
+        self.size_x_ = cells_size_x 
         self.size_y_ = cells_size_y
-        self.resolution_ = resolution
+        self.resolution_ = resolution # grid length
         self.origin_x_ = origin_x
         self.origin_y_ = origin_y
         self.default_value_ = default_value
+
         print (self.resolution_)
 
         self.initMaps(self.size_x_, self.size_y_,self.default_value_)
@@ -20,7 +22,7 @@ class costmap_2d:
             self.costmap_ = None
             print ("map's size error")
 
-    def resizeMap(self, size_x, size_y, resolution, origin_x, origin_y):
+    def reinitMap(self, size_x, size_y, resolution, origin_x, origin_y):
         self.size_x_ = size_x
         self.size_y_ = size_y
         self.resolution_ = resolution
@@ -79,7 +81,12 @@ class costmap_2d:
 
     def getResolution(self):
         return self.resolution_
-    
+
+    def getSize(self, min_x, min_y, max_x, max_y):
+        cell_size_x = (int)((max_x, min_x) / self.resolution_)
+        cell_size_y = (int)((max_y, min_y) / self.resolution_)
+        return [cell_size_x, cell_size_y]
+
     def mapToWorld(self, mx, my):
         wx = self.origin_x_ + (mx + 0.5) * self.resolution_
         wy = self.origin_y_ + (my + 0.5) * self.resolution_
@@ -170,7 +177,30 @@ class costmap_2d:
         self.size_x_ = new_size_x
         self.size_y_ = new_size_y
 
-    #a = [1,2]
+    def resizeMap(self, minP, maxP):
+        # max_cell_size = self.getSize(minP[0], minP[1], maxP[0], maxP[1])
+        iMinP = self.worldToMapNoBounds(minP[0], minP[1])
+        iMaxP = self.worldToMapNoBounds(maxP[0], maxP[1])
+        
+        if iMinP[0] > 0 or iMinP[1] > 0 or iMaxP[0] < self.size_x_ - 1 or iMaxP[1] < self.size_y_ - 1:
+            print ("reszie map error")
+
+        new_grid_ox = self.origin_x_ + iMinP[0] * self.resolution_
+        new_grid_oy = self.origin_y_ + iMinP[1] * self.resolution_
+
+        new_size_x = iMaxP[0] - iMinP[0]
+        new_size_y = iMaxP[1] - iMinP[1]
+
+        self.updateSize(new_size_x,new_size_y)
+        self.updateOrigin(new_grid_ox, new_grid_oy)
+    
+    def updateWeight(self, lo_max, lo_min):
+        for i in range(self.size_x_):
+            for j in range(self.size_y_):
+                if self.costmap_[i,j] > lo_max:
+                    self.costmap_[i,j] = lo_max
+                if self.costmap_[i,j] < lo_min:
+                    self.costmap_[i,j] = lo_min
 
     def convexFillCells(self, lineList):
         lenLine = len(lineList)
@@ -178,7 +208,12 @@ class costmap_2d:
             return
 
         for i in range(lenLine-1):
-            self.drawBresenham(lineList[i][0], lineList[i][1], lineList[i+1][0], lineList[i+1][1])
+            iLine = self.drawBresenham(lineList[i][0], lineList[i][1], lineList[i+1][0], lineList[i+1][1])
+            iLenLine = len(iLine)
+            for j in range(iLenLine):
+                x = iLine[j][0]
+                y = iLine[j][1]
+                self.costmap_[x,y] += 1
     #def raytraceLine(self, x0, y0, x1, y1):
         
     def drawBresenham(self, x0, y0, x1, y1):
@@ -197,11 +232,13 @@ class costmap_2d:
 
         x = x0
         y = y0
+        line = []
         if k > 1:
             while True:
                 if y > y1:
                     break
-                self.costmap_[x,y] += 1
+                line.append([x,y])
+                #self.costmap_[x,y] += 1
                 y = y + 1
                 d = d + 1 / k
                 if d > 0.5:
@@ -211,7 +248,8 @@ class costmap_2d:
             while True:
                 if x > x1:
                     break
-                self.costmap_[x,y] += 1
+                #self.costmap_[x,y] += 1
+                line.append([x,y])
                 x = x + 1
                 d = d + k
                 if d > 0.5:
@@ -221,7 +259,8 @@ class costmap_2d:
             while True:
                 if x > x1:
                     break
-                self.costmap_[x,y] += 1
+                line.append([x,y])
+                #self.costmap_[x,y] += 1
                 x = x + 1
                 d = d - k
                 if d > 0.5:
@@ -231,10 +270,26 @@ class costmap_2d:
             while True:
                 if y < y1:
                     break
-                self.costmap_[x,y] += 1
+                line.append([x,y])
+                #self.costmap_[x,y] += 1
                 y = y - 1
                 d = d - 1 / k
                 if d > 0.5:
                     x = x + 1
                     d = d - 1
+        return line
+
+    def min_pose(self, p1, p2):
+        if p1[0] < p2[0]:
+            p2[0] = p1[0]
+        if p1[1] < p2[1]:
+            p2[1] = p1[1]
+        return p2
+    
+    def max_pose(self, p1, p2):
+        if p1[0] > p2[0]:
+            p2[0] = p1[0]
+        if p1[1] > p2[1]:
+            p2[1] = p1[1]
+        return p2
 
