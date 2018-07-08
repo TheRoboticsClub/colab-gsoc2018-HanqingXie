@@ -2,8 +2,6 @@ import numpy as np
 import time
 import math
 
-
-
 class noHolomonicControl:
     def __init__(self):
         #self.pathlist = pathlist
@@ -16,12 +14,16 @@ class noHolomonicControl:
         self.w = 0
         self.e_old = [0,0,0]
         self.e = [0,0,0]
+        self.controlYaw = True
 
     def setPath(self, pathlist):
         self.pathlist = pathlist
     
     def getPath(self):
         return self.pathlist
+    
+    def setControlYaw(self, controlYaw):
+        self.controlYaw = False
 
     def findTarget(self,Pose):
         X = Pose[0]
@@ -84,24 +86,36 @@ class noHolomonicControl:
             self.e_old[1] = self.e[1]
             self.e_old[2] = self.e[2]
         else:
-            theta = math.atan2((TargetPose[1] - Pose[1]),(TargetPose[0] - Pose[0]))
-            theta_01 = theta - Pose[2]
-            theta_21 = TargetPose[2] - theta
-            dis = math.sqrt(math.pow((TargetPose[1] - Pose[1]),2)+math.pow((TargetPose[0] - Pose[0]),2))
-            if theta_01 > 0.05:
-                self.v = 0
-                self.w = max(0.05, 0.5*theta_01)
-            elif dis > 0.1:
-                self.v = max(0.1, 0.5*dis)
-                self.w = 0
-            elif theta_21 > 0.05:
-                self.v = 0
-                self.w = max(0.05, 0.5*theta_21)
+            if self.controlYaw:
+                theta = math.atan2((TargetPose[1] - Pose[1]),(TargetPose[0] - Pose[0]))
+                theta_01 = theta - Pose[2]
+                theta_21 = TargetPose[2] - theta
+                dis = math.sqrt(math.pow((TargetPose[1] - Pose[1]),2)+math.pow((TargetPose[0] - Pose[0]),2))
+                if math.fabs(theta_01) > 0.05:
+                    self.v = 0
+                    self.w = 0.5*theta_01
+                elif dis > 0.1:
+                    self.v = max(0.1, 0.5*dis)
+                    self.w = 0
+                elif math.fabs(theta_21) > 0.05:
+                    self.v = 0
+                    self.w = 0.5*theta_21
+                else:
+                    self.v = 0
+                    self.w = 0
             else:
-                self.v = 0
-                self.w = 0
-                
-
+                theta = math.atan2((TargetPose[1] - Pose[1]),(TargetPose[0] - Pose[0]))
+                theta_01 = theta - Pose[2]
+                dis = math.sqrt(math.pow((TargetPose[1] - Pose[1]),2)+math.pow((TargetPose[0] - Pose[0]),2))
+                if math.fabs(theta_01) > 0.05:
+                    self.v = 0
+                    self.w = 0.5*theta_01
+                elif dis > 0.1:
+                    self.v = max(0.1, 0.5*dis)
+                    self.w = 0
+                else:
+                    self.v = 0
+                    self.w = 0
 
         return [self.v, self.w]
         # self.motors.sendV(self.v)

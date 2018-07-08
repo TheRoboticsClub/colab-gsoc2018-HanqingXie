@@ -2,20 +2,34 @@
 from ompl_planner.ompl_planner import ompl_planner
 from control.control import noHolomonicControl
 from path_processing.smoothPath import smooth
-from map.occGridMap import occGridMap
+from map.occGridMap import occGridMap,costmap_2d
 
+import cv2
+import numpy as np
 import matplotlib.pyplot as plt
 import math
 
 class navigation:
-    def __init__(self):
+    def __init__(self, files, origin_x, origin_y, resolution):
         self.control = noHolomonicControl()
         self.smooth = smooth()
         self.occGridMap = occGridMap()
+        
+        if files:
+            self.have_map = True
+            self.init_img = cv2.imread(files)
+            size = self.init_img.shape
+            self.gridMap = costmap_2d(size[0],size[1],resolution, origin_x, origin_y)
+            for i in range(size[0]):
+                for j in range(size[1]):
+                    data = (np.sum(self.init_img[i,j]))/3
+                    self.gridMap.setCost(i,j,data)
+        else:
+            self.have_map = False
+            self.gridMap = costmap_2d(100,100,0.2, 0,0)
         self.getTarget = False
     
-    def path_planning(self,current_pose,goal_pose,costMap):
-
+    def path_planning(self,current_pose,goal_pose):
         startX = current_pose[0]
         startY = current_pose[1]
         startYaw = current_pose[2]
@@ -23,15 +37,25 @@ class navigation:
         goalY = goal_pose[1]
         goalYaw = goal_pose[2]
         print (startX, startY, startYaw, goalX, goalY, goalYaw)
+        start_pose_world = [0,0]
+        goal_pose_world = [0,0]
+        start_pose_world = self.gridMap.worldToMap(startX,startY)
 
-        ompl_sol = ompl_planner(None, startX, startY, startYaw, goalX, goalY, goalYaw, "rrt", True, True)
+        goal_pose_world = self.gridMap.worldToMap(goalX, goalY)
+        ompl_control = False
+        ompl_sol = ompl_planner(self.gridMap, startX, startY, startYaw, goalX, goalY, goalYaw, "rrtstar", ompl_control, False)
         path_list = ompl_sol.omplRunOnce()
         #print self.pathlist
-        if path_list:
-            path_list = self.path_smooth(path_list,current_pose)
+        if path_list :
+            if ompl_control:
+                path_list = self.path_smooth(path_list,current_pose)
 
-            self.control.setPath(path_list)
-            return True
+                self.control.setPath(path_list)
+                return True
+            else:
+                self.control.setControlYaw(False)
+                self.control.setPath(path_list)
+                return True
         else:
             return False
     

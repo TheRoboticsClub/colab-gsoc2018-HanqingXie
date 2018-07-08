@@ -4,7 +4,7 @@ from math import cos,sin,tan,pow,pi
 from costmap_2d import costmap_2d
 import cv2
 class occGridMap:
-    def __init__(self, lo_occ = 10, lo_free = -5,lo_max = 15,lo_min = -15):
+    def __init__(self, lo_occ = -10, lo_free = 5,lo_max = 15,lo_min = -15):
         self.lo_occ = lo_occ
         self.lo_free = lo_free
         self.lo_max = lo_max

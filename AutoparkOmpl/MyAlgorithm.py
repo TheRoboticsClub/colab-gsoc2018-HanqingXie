@@ -32,10 +32,9 @@ class MyAlgorithm(threading.Thread):
         self.lock = threading.Lock()
         threading.Thread.__init__(self, args=self.stop_event)
 
-        self.navigation = navigation()
+        self.navigation = navigation('/home/hywel/JdeRobot_ws/colab-gsoc2018-HanqingXie/AutoparkOmpl/init_map.ppm',-250, -250, 1.25)
 
         self.find_path = False
-        self.getTarget = False
 
         self.buildMap = occGridMap()
 
@@ -78,7 +77,7 @@ class MyAlgorithm(threading.Thread):
         #print "Runing"
         #self.find_path = True
         #self.pathlist = [[13.5,12,10.5,9,7.5],[2.5,1.5,0,-1.5,-2.5],[0,0.5,1,0.5,0]]
-        '''
+
         if self.find_path:
             pose = [0,0,0]
             pose[0] = self.pose3d.getPose3d().x
@@ -99,13 +98,13 @@ class MyAlgorithm(threading.Thread):
             pose[1] = self.pose3d.getPose3d().y
             pose[2] = self.pose3d.getPose3d().yaw
             goal_pose = [0,0,0]
-            goal_pose[0] = 7.25
-            goal_pose[1] = -3
+            goal_pose[0] = 96
+            goal_pose[1] = 118
             goal_pose[2] = 0
 
-            self.find_path = self.navigation.path_planning(pose,goal_pose, None)
-        '''
+            self.find_path = self.navigation.path_planning(pose,goal_pose)
 
+        '''
         pose = [0,0,0]
         pose[0] = self.pose3d.getPose3d().x
         pose[1] = self.pose3d.getPose3d().y
@@ -122,6 +121,7 @@ class MyAlgorithm(threading.Thread):
         laser2_data = self.laser3.getLaserData()
         laser2 = self.parse_laser_data(laser2_data)
         self.navigation.updateMap(laser2,2,pose)
+        '''
     
     def parse_laser_data(self, laser_data):
         laser = []

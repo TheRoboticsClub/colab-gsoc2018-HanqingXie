@@ -52,7 +52,7 @@ import matplotlib.pyplot as plt
 ## @cond IGNORE
 # a decomposition is only needed for SyclopRRT and SyclopEST
 class RigidBodyPlanning:
-    def __init__(self,costMap, start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw, plannerType):
+    def __init__(self, costMap, start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw, plannerType):
         self.costMap = costMap
         self.start_x = start_x
         self.start_y = start_y
@@ -77,9 +77,9 @@ class RigidBodyPlanning:
                 if wx > 12 or wx < 5.5:
                     tmp = False 
         else:
-            mPoint = self.costMap.worldToMap(wx, wy)
+            mPoint = self.costMap.worldToMapEnforceBounds(wx, wy)
             cost = self.costMap.getCost(mPoint[0],mPoint[1])
-            if cost >= 1:
+            if cost <= 127:
                 tmp = False
             else:
                 tmp = True
