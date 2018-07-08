@@ -228,7 +228,8 @@ class costmap_2d:
         if delta_x == 0:
             k = 999999999
         else:
-            k = delta_y / delta_x
+            k = float(delta_y) / delta_x
+    
 
         x = x0
         y = y0

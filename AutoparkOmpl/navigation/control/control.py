@@ -50,37 +50,58 @@ class noHolomonicControl:
     def isGetTarget(self):
         return self.getTarget
 
-    def control(self, Pose):
+    def control(self, Pose, id):
+        # id = 1, pid
+        # id = 2, direct
         TargetPose = self.findTarget(Pose)
         print ("pose")
         print Pose
         print ("target")
         print TargetPose
+        if id==1:
+            self.e[0] = math.cos(Pose[2])*(TargetPose[0] - Pose[0]) + math.sin(Pose[2])*(TargetPose[1] - Pose[1])
+            self.e[1] = -math.sin(Pose[2])*(TargetPose[0] - Pose[0]) + math.cos(Pose[2])*(TargetPose[1] - Pose[1])
+            self.e[2] = TargetPose[2] - Pose[2]
+            print ("e:")
+            print self.e
+            print ("e_old:")
+            print self.e_old
+            self.v = self.v_old + 0.2*(self.e[0] - self.e_old[0]) + 0.01*self.e[0]
+            self.w = self.w_old + 0.5*self.v*(self.e[1] - self.e_old[1])  + 0.001*self.e[1] + 0.2*(self.e[2] - self.e_old[2]) + 0.01*self.e[2]
+            #self.pathlist
+            print ("v w: ")
+            print (self.v,self.w)
+            print (self.v_old,self.w_old)
+            if self.v > 0.5:
+                self.w = self.w*0.5/self.v
+                self.v = 0.5
+            if self.v < -0.5:
+                self.w = self.w*-0.5/self.v
+                self.v = -0.5 
+            self.v_old = self.v
+            self.w_old = self.w
+            self.e_old[0] = self.e[0]
+            self.e_old[1] = self.e[1]
+            self.e_old[2] = self.e[2]
+        else:
+            theta = math.atan2((TargetPose[1] - Pose[1]),(TargetPose[0] - Pose[0]))
+            theta_01 = theta - Pose[2]
+            theta_21 = TargetPose[2] - theta
+            dis = math.sqrt(math.pow((TargetPose[1] - Pose[1]),2)+math.pow((TargetPose[0] - Pose[0]),2))
+            if theta_01 > 0.05:
+                self.v = 0
+                self.w = max(0.05, 0.5*theta_01)
+            elif dis > 0.1:
+                self.v = max(0.1, 0.5*dis)
+                self.w = 0
+            elif theta_21 > 0.05:
+                self.v = 0
+                self.w = max(0.05, 0.5*theta_21)
+            else:
+                self.v = 0
+                self.w = 0
+                
 
-        self.e[0] = math.cos(Pose[2])*(TargetPose[0] - Pose[0]) + math.sin(Pose[2])*(TargetPose[1] - Pose[1])
-        self.e[1] = -math.sin(Pose[2])*(TargetPose[0] - Pose[0]) + math.cos(Pose[2])*(TargetPose[1] - Pose[1])
-        self.e[2] = TargetPose[2] - Pose[2]
-        print ("e:")
-        print self.e
-        print ("e_old:")
-        print self.e_old
-        self.v = self.v_old + 0.2*(self.e[0] - self.e_old[0]) + 0.01*self.e[0]
-        self.w = self.w_old + 0.5*self.v*(self.e[1] - self.e_old[1])  + 0.001*self.e[1] + 0.2*(self.e[2] - self.e_old[2]) + 0.01*self.e[2]
-        #self.pathlist
-        print ("v w: ")
-        print (self.v,self.w)
-        print (self.v_old,self.w_old)
-        if self.v > 0.5:
-            self.w = self.w*0.5/self.v
-            self.v = 0.5
-        if self.v < -0.5:
-            self.w = self.w*-0.5/self.v
-            self.v = -0.5 
-        self.v_old = self.v
-        self.w_old = self.w
-        self.e_old[0] = self.e[0]
-        self.e_old[1] = self.e[1]
-        self.e_old[2] = self.e[2]
 
         return [self.v, self.w]
         # self.motors.sendV(self.v)

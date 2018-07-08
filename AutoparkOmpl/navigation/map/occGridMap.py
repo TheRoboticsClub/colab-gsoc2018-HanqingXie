@@ -4,16 +4,16 @@ from math import cos,sin,tan,pow,pi
 from costmap_2d import costmap_2d
 import cv2
 class occGridMap:
-    def __init__(self, lo_occ = 1.6, lo_free = -0.7,lo_max = 9,lo_min = -7):
+    def __init__(self, lo_occ = 10, lo_free = -5,lo_max = 15,lo_min = -15):
         self.lo_occ = lo_occ
         self.lo_free = lo_free
         self.lo_max = lo_max
         self.lo_min = lo_min
-        self.map = costmap_2d(300, 300, 0.1)
+        self.map = costmap_2d(100, 100, 0.2)
         self.m_laserpose = []
-        self.m_laserpose.append( [1,0,0] )
-        self.m_laserpose.append( [0,-1,-pi/2] )
-        self.m_laserpose.append( [-1,0,pi] )
+        self.m_laserpose.append( [2,0,0] )
+        self.m_laserpose.append( [-1.9,0,pi] )
+        self.m_laserpose.append( [0.3,-1,-pi/2] )
         self.m_laserMaxRange = 11
         self.m_usableRange = 9
 
@@ -27,7 +27,7 @@ class occGridMap:
         self.computerActiveArea(laserPose, laserData)
     
         P0 = self.map.worldToMapEnforceBounds(laserPose[0],laserPose[1])
-        print ("P0 = ", P0, laserPose)
+        #print ("P0 = ", P0, laserPose)
 
         for i in range(180):
             r = laserData[i][0]
@@ -36,12 +36,12 @@ class occGridMap:
             if r > self.m_usableRange:
                 r = self.m_usableRange
             phit = [0,0]
-            angle = math.radians(i) - pi/2
+            angle = math.radians(180 - i) - pi/2
             phit[0] = laserPose[0] + r * cos(laserPose[2] - angle)
             phit[1] = laserPose[1] + r * sin(laserPose[2] - angle)
             P1 = self.map.worldToMapEnforceBounds(phit[0],phit[1])
-            #print ("P1 = ", P1, phit, i)
-            line = self.map.drawBresenham(P0[0],P0[1],P1[0],P1[0])
+            #print ("P1 = ", P1, phit, i, "P0 = ", P0, laserPose)
+            line = self.map.drawBresenham(P0[0],P0[1],P1[0],P1[1])
             #print ("line = " , line )
             lenLine = len(line)
             for i in range(lenLine):
@@ -98,8 +98,11 @@ class occGridMap:
         
         for i in range(h):
             for j in range(w):
-                mapppm[i,j,0] = (self.map.costmap_[i,j]+ 7)*255/16
-                mapppm[i,j,1] = (self.map.costmap_[i,j]+ 7)*255/16
-                mapppm[i,j,2] = (self.map.costmap_[i,j]+ 7)*255/16
+                mapppm[i,j,0] = (self.map.costmap_[i,j]+ 15)*255/30
+                mapppm[i,j,1] = (self.map.costmap_[i,j]+ 15)*255/30
+                mapppm[i,j,2] = (self.map.costmap_[i,j]+ 15)*255/30
+                # if self.map.costmap_[i,j] != 0:
+                #     print self.map.costmap_[i,j]
+
         #print self.map.costmap_
         cv2.imwrite('map_image.ppm',mapppm)
