@@ -12,6 +12,7 @@ from navigation.control.control import noHolomonicControl
 from navigation.path_processing.smoothPath import smooth
 from navigation.map.occGridMap import occGridMap
 from navigation.navigation import navigation
+from navigation.laser.laser_handle import laser_handle
 import matplotlib.pyplot as plt
 from scipy import interpolate  
 
@@ -32,12 +33,13 @@ class MyAlgorithm(threading.Thread):
         self.lock = threading.Lock()
         threading.Thread.__init__(self, args=self.stop_event)
 
-        self.navigation = navigation('/home/hywel/JdeRobot_ws/colab-gsoc2018-HanqingXie/AutoparkOmpl/init_map.ppm',-250, -250, 1.25)
+        self.navigation = navigation(None,-250, -250, 1.25)
+        #'/home/hywel/JdeRobot_ws/colab-gsoc2018-HanqingXie/AutoparkOmpl/init_map.ppm'
 
         self.find_path = False
-
+        self.find_target = False
         self.buildMap = occGridMap()
-
+        self.laserHandle = laser_handle()
         
 
     def run (self):
@@ -74,42 +76,42 @@ class MyAlgorithm(threading.Thread):
             
             
     def execute(self):
-        #print "Runing"
-        #self.find_path = True
-        #self.pathlist = [[13.5,12,10.5,9,7.5],[2.5,1.5,0,-1.5,-2.5],[0,0.5,1,0.5,0]]
-
-        if self.find_path:
-            pose = [0,0,0]
-            pose[0] = self.pose3d.getPose3d().x
-            pose[1] = self.pose3d.getPose3d().y
-            pose[2] = self.pose3d.getPose3d().yaw
-
-            data = self.navigation.path_following(pose)
-            self.motors.sendV(data[0])
-            self.motors.sendW(data[1])
-
-        else:
-            self.motors.sendV(0)
-            self.motors.sendW(0)
-            #car (6,3)
-            #tartget (7.25,-3)
-            pose = [0, 0, 0]
-            pose[0] = self.pose3d.getPose3d().x
-            pose[1] = self.pose3d.getPose3d().y
-            pose[2] = self.pose3d.getPose3d().yaw
-            goal_pose = [0,0,0]
-            goal_pose[0] = 96
-            goal_pose[1] = 118
-            goal_pose[2] = 0
-
-            self.find_path = self.navigation.path_planning(pose,goal_pose)
-
-        '''
         pose = [0,0,0]
         pose[0] = self.pose3d.getPose3d().x
         pose[1] = self.pose3d.getPose3d().y
         pose[2] = self.pose3d.getPose3d().yaw
 
+        if not self.find_target:
+            laser2_data = self.laser3.getLaserData()
+            laser2 = self.parse_laser_data(laser2_data)
+            target = self.laserHandle.autopark_place(laser2, pose)
+            if target:
+                self.find_target = True
+                self.target = target
+                self.motors.sendV(0)
+                self.motors.sendW(0)
+                print ("target", target)
+            else:
+                self.motors.sendV(2)
+
+        if not self.find_path and self.find_target:
+            self.motors.sendV(0)
+            self.motors.sendW(0)
+            #car (6,3)
+            goal_pose = [0,0,0]
+            goal_pose[0] = self.target[0]
+            goal_pose[1] = self.target[1]
+            goal_pose[2] = self.target[2]
+            self.find_path = self.navigation.path_planning(pose,goal_pose)
+
+        if self.find_path and self.find_target:
+            data = self.navigation.path_following(pose)
+            self.motors.sendV(data[0])
+            self.motors.sendW(data[1])
+
+            
+
+        '''
         laser0_data = self.laser1.getLaserData()
         laser0 = self.parse_laser_data(laser0_data)
         self.navigation.updateMap(laser0,0,pose)
@@ -128,10 +130,8 @@ class MyAlgorithm(threading.Thread):
         for i in range(laser_data.numLaser):
             dist = laser_data.distanceData[i]/1000.0
             angle = math.radians(i)
-            laser.append([dist])#[(dist, angle)]
+            laser.append([dist, angle])#
         return laser
 
 #laser1~ 0 front      
-# laser2 ~ 2 
-# laser3 ~ 1
 #region floyd

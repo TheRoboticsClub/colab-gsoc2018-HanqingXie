@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from math import cos,sin,tan,pow,pi,sqrt
 
 class navigation:
     def __init__(self, files, origin_x, origin_y, resolution):
@@ -26,8 +27,29 @@ class navigation:
                     self.gridMap.setCost(i,j,data)
         else:
             self.have_map = False
-            self.gridMap = costmap_2d(100,100,0.2, 0,0)
+            self.gridMap = costmap_2d(100,100,resolution, origin_x, origin_y)
         self.getTarget = False
+    
+    def update_map_autopark(self,car_pose,target_pose):
+        #car [6,3]
+        #target [8,5]
+        self.gridMap.resizeMapCheckPoint(self.move_pose(car_pose,[4,2.5]))
+        self.gridMap.resizeMapCheckPoint(self.move_pose(car_pose,[4,-2.5]))
+        self.gridMap.resizeMapCheckPoint(self.move_pose(car_pose,[-4,-2.5]))
+        self.gridMap.resizeMapCheckPoint(self.move_pose(car_pose,[-4,2.5]))
+        self.gridMap.resizeMapCheckPoint(self.move_pose(target_pose,[4,2.5]))
+        self.gridMap.resizeMapCheckPoint(self.move_pose(target_pose,[4,-2.5]))
+        self.gridMap.resizeMapCheckPoint(self.move_pose(target_pose,[-4,-2.5]))
+        self.gridMap.resizeMapCheckPoint(self.move_pose(target_pose,[-4,2.5]))
+
+    def move_pose(self,pose,move):
+        assert len(pose) == 3
+        assert len(move) == 2
+        dx = move[1]*sin(pose[2]) + move[0]*cos(pose[2])
+        dy = -move[1]*cos(pose[2]) + move[0]*sin(pose[2])
+        x = pose[0] + dx
+        y = pose[1] + dy
+        return [x,y]
     
     def path_planning(self,current_pose,goal_pose):
         startX = current_pose[0]
@@ -37,13 +59,12 @@ class navigation:
         goalY = goal_pose[1]
         goalYaw = goal_pose[2]
         print (startX, startY, startYaw, goalX, goalY, goalYaw)
-        start_pose_world = [0,0]
-        goal_pose_world = [0,0]
-        start_pose_world = self.gridMap.worldToMap(startX,startY)
 
-        goal_pose_world = self.gridMap.worldToMap(goalX, goalY)
-        ompl_control = False
-        ompl_sol = ompl_planner(self.gridMap, startX, startY, startYaw, goalX, goalY, goalYaw, "rrtstar", ompl_control, False)
+        start_pose_map = self.gridMap.worldToMap(startX,startY)
+        goal_pose_map = self.gridMap.worldToMap(goalX, goalY)
+
+        ompl_control = True
+        ompl_sol = ompl_planner(None, startX, startY, startYaw, goalX, goalY, goalYaw, "syclopest", ompl_control, False)
         path_list = ompl_sol.omplRunOnce()
         #print self.pathlist
         if path_list :
@@ -77,6 +98,8 @@ class navigation:
 
         plt.figure(2)
         plt.plot(path_list[0], path_list[1])
+        
+        num = len(path_list[0])
         for i in range(num):
             x1 = path_list[0][i]
             y1 = path_list[1][i]
@@ -108,6 +131,6 @@ class navigation:
         a = 1
     
 
-    def updateMap(self,laser, id, pose):
+    def update_map(self, laser, id, pose):
         self.occGridMap.registerScan(pose,id,laser)
         self.occGridMap.drawMap()

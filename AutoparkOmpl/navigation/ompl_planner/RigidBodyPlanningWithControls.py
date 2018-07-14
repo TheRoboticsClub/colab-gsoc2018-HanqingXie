@@ -83,7 +83,7 @@ class RigidBodyPlanningWithControls:
         else:
             mPoint = self.costMap.worldToMap(wx, wy)
             cost = self.costMap.getCost(mPoint[0],mPoint[1])
-            if cost >= 1:
+            if cost < -5:
                 tmp = False
             else:
                 tmp = True

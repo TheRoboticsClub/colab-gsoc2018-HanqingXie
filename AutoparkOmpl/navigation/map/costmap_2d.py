@@ -194,6 +194,16 @@ class costmap_2d:
         self.updateSize(new_size_x,new_size_y)
         self.updateOrigin(new_grid_ox, new_grid_oy)
     
+    def resizeMapCheckPoint(self,world_pose):
+        map_pose = self.worldToMap(world_pose[0], world_pose[1])
+        if not map_pose:
+            minP = self.mapToWorld(0,0)
+            maxP = self.mapToWorld(self.size_x_ - 1, self.size_y_ - 1)
+            minP = self.min_pose(world_pose, minP)
+            maxP = self.max_pose(world_pose, maxP)
+            self.resizeMap(minP, maxP)
+
+    
     def updateWeight(self, lo_max, lo_min):
         for i in range(self.size_x_):
             for j in range(self.size_y_):
