@@ -109,10 +109,14 @@ class RigidBodyPlanningWithControls:
             size_y = self.costMap.getSizeInMetersY()
             low = min(ox, oy)
             high = max(ox+size_x, oy+size_y)
-            print (low)
-            print (high)
-            self.bounds.setLow(low)
-            self.bounds.setHigh(high)
+            print ("low",low)
+            print ("high",high)
+            #self.bounds.setLow(low)
+            #self.bounds.setHigh(high)
+            self.bounds.setLow(0,ox)
+            self.bounds.setHigh(0,ox+size_x)
+            self.bounds.setLow(1,oy)
+            self.bounds.setHigh(1,oy+size_y)
 
         self.space.setBounds(self.bounds)
 

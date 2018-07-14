@@ -108,8 +108,7 @@ class smooth:
                 yawtmp = self.setYaw(yawtmp,start[2])
             else:
                 yawtmp = self.setYaw(yawtmp,self.pathlist[2][i-1])
-            print "yawtmp"
-            print yawtmp
+            print ("yawtmp",yawtmp)
             self.pathlist[2][i] = yawtmp
         return self.pathlist
     

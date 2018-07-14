@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from math import cos,sin,tan,pow,pi
+import cv2
 
 class costmap_2d:
     def __init__(self,cells_size_x, cells_size_y, resolution, origin_x = 0, origin_y = 0, default_value = 0):
@@ -11,7 +12,6 @@ class costmap_2d:
         self.origin_y_ = origin_y
         self.default_value_ = default_value
 
-        print (self.resolution_)
 
         self.initMaps(self.size_x_, self.size_y_,self.default_value_)
 
@@ -303,4 +303,20 @@ class costmap_2d:
         if p1[1] > p2[1]:
             p2[1] = p1[1]
         return p2
+
+    def drawMap(self):
+        h = self.size_x_
+        w = self.size_y_
+        mapppm = np.zeros((h,w,3))
+        
+        for i in range(h):
+            for j in range(w):
+                mapppm[i,j,0] = (self.costmap_[i,j]+ 15)*255/30
+                mapppm[i,j,1] = (self.costmap_[i,j]+ 15)*255/30
+                mapppm[i,j,2] = (self.costmap_[i,j]+ 15)*255/30
+                # if self.map.costmap_[i,j] != 0:
+                #     print self.map.costmap_[i,j]
+        #print self.map.costmap_
+        cv2.imwrite('map_image.ppm',mapppm)
+
 

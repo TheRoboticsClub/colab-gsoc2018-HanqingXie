@@ -33,7 +33,7 @@ class MyAlgorithm(threading.Thread):
         self.lock = threading.Lock()
         threading.Thread.__init__(self, args=self.stop_event)
 
-        self.navigation = navigation(None,-250, -250, 1.25)
+        self.navigation = navigation(None,0, 0, 1.25)
         #'/home/hywel/JdeRobot_ws/colab-gsoc2018-HanqingXie/AutoparkOmpl/init_map.ppm'
 
         self.find_path = False
@@ -102,6 +102,7 @@ class MyAlgorithm(threading.Thread):
             goal_pose[0] = self.target[0]
             goal_pose[1] = self.target[1]
             goal_pose[2] = self.target[2]
+            self.navigation.update_map_autopark(pose,goal_pose)
             self.find_path = self.navigation.path_planning(pose,goal_pose)
 
         if self.find_path and self.find_target:

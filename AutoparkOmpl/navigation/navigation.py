@@ -30,17 +30,64 @@ class navigation:
             self.gridMap = costmap_2d(100,100,resolution, origin_x, origin_y)
         self.getTarget = False
     
+
     def update_map_autopark(self,car_pose,target_pose):
+
         #car [6,3]
         #target [8,5]
-        self.gridMap.resizeMapCheckPoint(self.move_pose(car_pose,[4,2.5]))
-        self.gridMap.resizeMapCheckPoint(self.move_pose(car_pose,[4,-2.5]))
-        self.gridMap.resizeMapCheckPoint(self.move_pose(car_pose,[-4,-2.5]))
-        self.gridMap.resizeMapCheckPoint(self.move_pose(car_pose,[-4,2.5]))
-        self.gridMap.resizeMapCheckPoint(self.move_pose(target_pose,[4,2.5]))
-        self.gridMap.resizeMapCheckPoint(self.move_pose(target_pose,[4,-2.5]))
-        self.gridMap.resizeMapCheckPoint(self.move_pose(target_pose,[-4,-2.5]))
-        self.gridMap.resizeMapCheckPoint(self.move_pose(target_pose,[-4,2.5]))
+        p1 = self.move_pose(car_pose,[12,-3])
+        p2 = self.move_pose(car_pose,[-12,-3])
+        p3 = self.move_pose(car_pose,[12,3])
+        p4 = self.move_pose(car_pose,[-12,3])
+        p5 = self.move_pose(target_pose,[4,2.5])
+        p6 = self.move_pose(target_pose,[-4,2.5])
+
+        self.gridMap.resizeMapCheckPoint(p1)
+        self.gridMap.resizeMapCheckPoint(p2)
+        self.gridMap.resizeMapCheckPoint(p3)
+        self.gridMap.resizeMapCheckPoint(p4)
+        self.gridMap.resizeMapCheckPoint(p5)
+        self.gridMap.resizeMapCheckPoint(p6)
+
+        m_p1 = self.gridMap.worldToMapEnforceBounds(p1[0],p1[1])
+        m_p2 = self.gridMap.worldToMapEnforceBounds(p2[0],p2[1])
+        m_p3 = self.gridMap.worldToMapEnforceBounds(p3[0],p3[1])
+        m_p4 = self.gridMap.worldToMapEnforceBounds(p4[0],p4[1])
+        m_p5 = self.gridMap.worldToMapEnforceBounds(p5[0],p5[1])
+        m_p6 = self.gridMap.worldToMapEnforceBounds(p6[0],p6[1])
+
+        print ("getSizeInCellsX",self.gridMap.getSizeInCellsX())
+        print ("getSizeInCellsY",self.gridMap.getSizeInCellsY())
+        print ("getOriginX",self.gridMap.getOriginX())
+        print ("getOriginY",self.gridMap.getOriginY())
+        print ("p1",p1,m_p1)
+        print ("p2",p2,m_p2)
+        print ("p3",p3,m_p3)
+        print ("p4",p4,m_p4)
+        print ("p5",p5,m_p5)
+        print ("p6",p6,m_p6)
+        h = self.gridMap.size_x_
+        w = self.gridMap.size_y_
+        for i in range(h):
+            for j in range(w):
+                self.gridMap.setCost(i,j,-10)
+
+        if m_p1[1] == m_p2[1]:
+            #scene like autopark.world
+            print ("update map")
+            num_x_1 = m_p1[0] - m_p2[0]
+            num_y_1 = m_p1[1] - m_p3[1]
+            for i in range(num_x_1):
+                for j in range(num_y_1):
+                    self.gridMap.setCost(i+m_p4[0],j+m_p4[1],15)
+            num_x_2 = m_p5[0] - m_p6[0]
+            num_y_2 = m_p3[1] - m_p5[1]
+            for i in range(num_x_2):
+                for j in range(num_y_2):
+                    self.gridMap.setCost(i+m_p6[0],j+m_p6[1],15)
+            self.gridMap.drawMap()
+
+        
 
     def move_pose(self,pose,move):
         assert len(pose) == 3
@@ -58,13 +105,13 @@ class navigation:
         goalX = goal_pose[0]
         goalY = goal_pose[1]
         goalYaw = goal_pose[2]
-        print (startX, startY, startYaw, goalX, goalY, goalYaw)
+        print ("pose",startX, startY, startYaw, goalX, goalY, goalYaw)
 
         start_pose_map = self.gridMap.worldToMap(startX,startY)
         goal_pose_map = self.gridMap.worldToMap(goalX, goalY)
 
         ompl_control = True
-        ompl_sol = ompl_planner(None, startX, startY, startYaw, goalX, goalY, goalYaw, "syclopest", ompl_control, False)
+        ompl_sol = ompl_planner(self.gridMap, startX, startY, startYaw, goalX, goalY, goalYaw, "syclopest", ompl_control, False)
         path_list = ompl_sol.omplRunOnce()
         #print self.pathlist
         if path_list :
@@ -98,7 +145,7 @@ class navigation:
 
         plt.figure(2)
         plt.plot(path_list[0], path_list[1])
-        
+
         num = len(path_list[0])
         for i in range(num):
             x1 = path_list[0][i]

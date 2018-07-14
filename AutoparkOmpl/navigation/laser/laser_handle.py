@@ -10,7 +10,6 @@ class laser_handle:
         car_y = pose[1]
         car_yaw = pose[2]
         num = len(laser_data)
-        print (num)
         tmp = 0
         right_angle = 90
         left_angle = 90

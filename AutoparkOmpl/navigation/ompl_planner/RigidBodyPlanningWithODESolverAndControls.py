@@ -111,8 +111,8 @@ class RigidBodyPlanningWithODESolverAndControls:
             size_y = self.costMap.getSizeInMetersY()
             low = min(ox, oy)
             high = max(ox+size_x, oy+size_y)
-            print (low)
-            print (high)
+            print ("low",low)
+            print ("high",high)
             self.bounds.setLow(low)
             self.bounds.setHigh(high)
 
