@@ -15,6 +15,7 @@ class noHolomonicControl:
         self.e_old = [0,0,0]
         self.e = [0,0,0]
         self.controlYaw = True
+        self.getFinal = False
 
     def setPath(self, pathlist):
         self.pathlist = pathlist
@@ -35,8 +36,9 @@ class noHolomonicControl:
         dis = math.sqrt(pow(X-TargetNowX,2)+pow(Y-TargetNowY,2))
         if dis < 1:
             if num == self.PathId:
-                if math.fabs(self.e[0]) < 0.1 and math.fabs(self.e[1])<0.5 and math.fabs(self.e[2])<0.1:
-                    self.getTarget = True
+                if id==1:
+                    if math.fabs(self.e[0]) < 0.1 and math.fabs(self.e[1])<0.5 and math.fabs(self.e[2])<0.1:
+                        self.getTarget = True
             else:
                 self.PathId += 1
         #elif(math.fabs(self.e[0]) < 0.01 and math.fabs(self.e[1])<1.5 and math.fabs(self.e[2])<0.01):
@@ -56,21 +58,20 @@ class noHolomonicControl:
         # id = 1, pid
         # id = 2, direct
         TargetPose = self.findTarget(Pose)
-        #print ("pose")
-        #print Pose
-        #print ("target")
-        #print TargetPose
+        num = len(self.pathlist[0])-1
+        print ("pose", Pose)
+        print ("target", TargetPose)
         if id==1:
             self.e[0] = math.cos(Pose[2])*(TargetPose[0] - Pose[0]) + math.sin(Pose[2])*(TargetPose[1] - Pose[1])
             self.e[1] = -math.sin(Pose[2])*(TargetPose[0] - Pose[0]) + math.cos(Pose[2])*(TargetPose[1] - Pose[1])
             self.e[2] = TargetPose[2] - Pose[2]
-            print ("e:",self.e)
-            print ("e_old:",self.e_old)
+            #print ("e:",self.e)
+            #print ("e_old:",self.e_old)
             self.v = self.v_old + 0.2*(self.e[0] - self.e_old[0]) + 0.01*self.e[0]
             self.w = self.w_old + 0.5*self.v*(self.e[1] - self.e_old[1])  + 0.001*self.e[1] + 0.2*(self.e[2] - self.e_old[2]) + 0.01*self.e[2]
             #self.pathlist
-            print ("v w: ",self.v,self.w)
-            print ("v w old: ",self.v_old,self.w_old)
+            #print ("v w: ",self.v,self.w)
+            #print ("v w old: ",self.v_old,self.w_old)
             if self.v > 0.5:
                 self.w = self.w*0.5/self.v
                 self.v = 0.5
@@ -87,17 +88,35 @@ class noHolomonicControl:
                 theta = math.atan2((TargetPose[1] - Pose[1]),(TargetPose[0] - Pose[0]))
                 theta_01 = theta - Pose[2]
                 theta_21 = TargetPose[2] - theta
+                theta_20 = TargetPose[2] - Pose[2]
                 dis = math.sqrt(math.pow((TargetPose[1] - Pose[1]),2)+math.pow((TargetPose[0] - Pose[0]),2))
-                if math.fabs(theta_01) > 0.05:
+                print ("theta_01 ",theta_01)
+                print ("theta_21 ",theta_21)
+                print ("dis ",dis)
+                if math.fabs(theta_01) > 0.2 and dis > 0.1 and ~self.getFinal:
                     self.v = 0
-                    self.w = 0.5*theta_01
-                elif dis > 0.1:
-                    self.v = max(0.1, 0.5*dis)
+                    if theta_01 > 0:
+                        self.w = max(0.2, theta_01)
+                    else:
+                        self.w = min(-0.2, theta_01)
+                elif dis > 0.1 and ~self.getFinal:
+                    self.v = max(0.2, dis) 
                     self.w = 0
-                elif math.fabs(theta_21) > 0.05:
+                elif math.fabs(theta_20) > 0.2 and num == self.PathId:
                     self.v = 0
-                    self.w = 0.5*theta_21
+                    if theta_21 > 0:
+                        self.w = max(0.2, theta_20)
+                    else:
+                        self.w = min(-0.2, theta_20)
+                    self.getFinal = True
+                # elif math.fabs(theta_21) > 0.2:
+                #     self.v = 0
+                #     if theta_21 > 0:
+                #         self.w = max(0.2, theta_21)
+                #     else:
+                #         self.w = min(-0.2, theta_21)
                 else:
+                    print ("get target")
                     self.v = 0
                     self.w = 0
             else:
@@ -111,9 +130,10 @@ class noHolomonicControl:
                     self.v = max(0.1, 0.5*dis)
                     self.w = 0
                 else:
+                    print ("get target")
                     self.v = 0
                     self.w = 0
+        
+        print ('v, w ', self.v, self.w)
 
         return [self.v, self.w]
-        # self.motors.sendV(self.v)
-        # self.motors.sendW(self.w)

@@ -92,7 +92,7 @@ class MyAlgorithm(threading.Thread):
                 self.motors.sendW(0)
                 print ("target", target)
             else:
-                self.motors.sendV(2)
+                self.motors.sendV(5)
 
         if not self.find_path and self.find_target:
             self.motors.sendV(0)

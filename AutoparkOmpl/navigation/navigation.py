@@ -111,8 +111,8 @@ class navigation:
         goal_pose_map = self.gridMap.worldToMap(goalX, goalY)
 
         ompl_control = True
-        ompl_sol = ompl_planner(self.gridMap, startX, startY, startYaw, goalX, goalY, goalYaw, "syclopest", ompl_control, False)
-        path_list = ompl_sol.omplRunOnce()
+        ompl_sol = ompl_planner(self.gridMap, startX, startY, startYaw, goalX, goalY, goalYaw, "rrt", ompl_control, False)
+        path_list = ompl_sol.omplRunOnce(50)
         #print self.pathlist
         if path_list :
             if ompl_control:
