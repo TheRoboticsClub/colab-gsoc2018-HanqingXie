@@ -52,14 +52,18 @@ import matplotlib.pyplot as plt
 ## @cond IGNORE
 # a decomposition is only needed for SyclopRRT and SyclopEST
 class RigidBodyPlanning:
-    def __init__(self, costMap, start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw, plannerType):
+    def __init__(self, costMap, dimension, start, start_yaw, goal, goal_yaw, plannerType):
         self.costMap = costMap
-        self.start_x = start_x
-        self.start_y = start_y
+        self.dimension = dimension
+        self.start_x = start[0]
+        self.start_y = start[1]
         self.start_yaw = start_yaw
-        self.goal_x = goal_x
-        self.goal_y = goal_y
+        self.goal_x = goal[0]
+        self.goal_y = goal[1]
         self.goal_yaw = goal_yaw
+        if self.dimension == 3:
+            self.start_z = start[2]
+            self.goal_z = goal[2]
         self.plannerType = plannerType
         self.simpleSetupControl()
 
@@ -67,18 +71,34 @@ class RigidBodyPlanning:
     def isStateValid(self, state):
         # perform collision checking or check if other constraints are
         # satisfied
-        wx = state.getX()
-        wy = state.getY()
         if not self.costMap:
+            wx = state.getX()
+            wy = state.getY()
             tmp = True
             if wy < -4 and wy > 5:
                 tmp = False
             elif wy < -0.5:
                 if wx > 12 or wx < 5.5:
                     tmp = False 
-        else:
+            return tmp
+
+        if self.dimension == 2:
+            wx = state.getX()
+            wy = state.getY()
+
             mPoint = self.costMap.worldToMapEnforceBounds(wx, wy)
             cost = self.costMap.getCost(mPoint[0],mPoint[1])
+            if cost < -5:
+                tmp = False
+            else:
+                tmp = True
+
+        elif self.dimension == 3:
+            wx = state.getX()
+            wy = state.getY()
+            wz = state.getZ()
+            mPoint = self.costMap.worldToMapEnforceBounds(wx, wy, wz)
+            cost = self.costMap.getCost(mPoint[0],mPoint[1],mPoint[2])
             if cost < -5:
                 tmp = False
             else:
@@ -86,11 +106,16 @@ class RigidBodyPlanning:
         return tmp
     
     def simpleSetupControl(self):
-        self.setSpace()
-        self.setProblem()
-        self.setPlanner()
+        if self.dimension == 2:
+            self.setSpace_2d()
+            self.setProblem_2d()
+            self.setPlanner_2d()
+        elif self.dimension == 3:
+            self.setSpace_3d()
+            self.setProblem_3d()
+            self.setPlanner_3d()
 
-    def setSpace(self):
+    def setSpace_2d(self):
         # construct the state space we are planning in
         self.space = ob.SE2StateSpace()
 
@@ -116,7 +141,7 @@ class RigidBodyPlanning:
         self.ss = og.SimpleSetup(self.space)
         self.ss.setStateValidityChecker(ob.StateValidityCheckerFn(self.isStateValid))
 
-    def setProblem(self):
+    def setProblem_2d(self):
         # create a start state
         start = ob.State(self.space)
         start().setX(self.start_x)
@@ -132,7 +157,74 @@ class RigidBodyPlanning:
         # set the start and goal states
         self.ss.setStartAndGoalStates(start, goal, 0.05)
     
-    def setPlanner(self):
+    def setPlanner_2d(self):
+        self.si = self.ss.getSpaceInformation()
+        if self.plannerType.lower() == "bitstar":
+            planner = og.BITstar(self.si)
+        elif self.plannerType.lower() == "fmtstar":
+            planner = og.FMT(self.si)
+        elif self.plannerType.lower() == "informedrrtstar":
+            planner = og.InformedRRTstar(self.si)
+        elif self.plannerType.lower() == "prmstar":
+            planner = og.PRMstar(self.si)
+        elif self.plannerType.lower() == "rrtstar":
+            planner = og.RRTstar(self.si)
+        elif self.plannerType.lower() == "sorrtstar":
+            planner = og.SORRTstar(self.si)
+        else:
+            OMPL_ERROR("Planner-type is not implemented in allocation function.")
+            planner = og.RRTstar(self.si)
+        self.ss.setPlanner(planner)
+
+    def setSpace_3d(self):
+        # construct the state space we are planning in
+        self.space = ob.SE3StateSpace()
+
+        # set the bounds for the R^2 part of SE(2)
+        self.bounds = ob.RealVectorBounds(3)
+        if not self.costMap:
+            self.bounds.setLow(-10)
+            self.bounds.setHigh(10)
+        else:
+            ox = self.costMap.getOriginX()
+            oy = self.costMap.getOriginY()
+            oz = self.costMap.getOriginZ()
+            size_x = self.costMap.getSizeInMetersX()
+            size_y = self.costMap.getSizeInMetersY()
+            size_z = self.costMap.getSizeInMetersZ()
+            low = min(ox, oy, oz)
+            high = max(ox+size_x, oy+size_y, oz+size_z)
+            print ("low",low)
+            print ("high",high)
+            self.bounds.setLow(low)
+            self.bounds.setHigh(high)
+        self.space.setBounds(self.bounds)
+
+        # define a simple setup class
+        self.ss = og.SimpleSetup(self.space)
+        self.ss.setStateValidityChecker(ob.StateValidityCheckerFn(self.isStateValid))
+
+    def setProblem_3d(self):
+        # create a start state
+        start = ob.State(self.space)
+        start().setX(self.start_x)
+        start().setY(self.start_y)
+        start().setZ(self.start_z)
+        #start().setYaw(self.start_yaw)
+        start().rotation().setIdentity()
+
+        # create a goal state
+        goal = ob.State(self.space)
+        goal().setX(self.goal_x)
+        goal().setY(self.goal_y)
+        goal().setZ(self.goal_z)
+        #goal().setYaw(self.goal_yaw)
+        goal().rotation().setIdentity()
+
+        # set the start and goal states
+        self.ss.setStartAndGoalStates(start, goal, 0.05)
+    
+    def setPlanner_3d(self):
         self.si = self.ss.getSpaceInformation()
         if self.plannerType.lower() == "bitstar":
             planner = og.BITstar(self.si)
@@ -153,7 +245,10 @@ class RigidBodyPlanning:
 
     def solve(self, runtime = None ):
         if not runtime:
-            runtime = 1
+            if self.dimension == 2:
+                runtime = 1
+            elif self.dimension == 3:
+                runtime = 5
         # attempt to solve the problem
         solved = self.ss.solve(runtime)
 
@@ -163,16 +258,27 @@ class RigidBodyPlanning:
             p = self.ss.getSolutionPath()
             print("Found solution:\n%s" % self.ss.getSolutionPath().printAsMatrix())
             #p.interpolate()
-            pathlist = [[] for i in range(3)]
+            if self.dimension == 2:
+                pathlist = [[] for i in range(3)]
 
-            for i in range(p.getStateCount()):
-                x = p.getState(i).getX()
-                y = p.getState(i).getY()
-                yaw = p.getState(i).getYaw()
-                pathlist[0].append(x)
-                pathlist[1].append(y)
-                pathlist[2].append(yaw)
-            return pathlist
+                for i in range(p.getStateCount()):
+                    x = p.getState(i).getX()
+                    y = p.getState(i).getY()
+                    yaw = p.getState(i).getYaw()
+                    pathlist[0].append(x)
+                    pathlist[1].append(y)
+                    pathlist[2].append(yaw)
+                return pathlist
+            elif self.dimension == 3:
+                pathlist = [[] for i in range(3)]
+                for i in range(p.getStateCount()):
+                    x = p.getState(i).getX()
+                    y = p.getState(i).getY()
+                    z = p.getState(i).getZ()
+                    pathlist[0].append(x)
+                    pathlist[1].append(y)
+                    pathlist[2].append(z)
+                return pathlist
         else:
             print ("can't find path")
             return 0
@@ -181,7 +287,7 @@ class RigidBodyPlanning:
 if __name__ == "__main__":
     
     
-    planner = RigidBodyPlanning(None, 6,3,0,7.25,-3,0, 'rrtstar')
+    planner = RigidBodyPlanning(None, 3, [0,0,1],0,[5,5,5],0, 'rrtstar')
     pathlist = planner.solve()
 
     plt.figure(1)

@@ -52,13 +52,13 @@ import matplotlib.pyplot as plt
 ## @cond IGNORE
 # a decomposition is only needed for SyclopRRT and SyclopEST
 class RigidBodyPlanningWithODESolverAndControls:
-    def __init__(self, costMap, start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw, plannerType):
+    def __init__(self, costMap, dimension, start, start_yaw, goal, goal_yaw, plannerType):
         self.costMap = costMap
-        self.start_x = start_x
-        self.start_y = start_y
+        self.start_x = start[0]
+        self.start_y = start[1]
         self.start_yaw = start_yaw
-        self.goal_x = goal_x
-        self.goal_y = goal_y
+        self.goal_x = goal[0]
+        self.goal_y = goal[1]
         self.goal_yaw = goal_yaw
         self.plannerType = plannerType
         self.simpleSetupControl()

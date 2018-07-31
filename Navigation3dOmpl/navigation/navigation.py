@@ -11,28 +11,38 @@ import math
 from math import cos,sin,tan,pow,pi,sqrt
 
 class navigation:
-    def __init__(self, files, origin_x, origin_y, resolution):
+    def __init__(self, files, origin, resolution, dimension = 2):
         self.control = noHolomonicControl()
         self.smooth = smooth()
-        self.occGridMap = occGridMap()
-        
-        if files:
-            self.have_map = True
-            self.init_img = cv2.imread(files)
-            size = self.init_img.shape
-            self.gridMap = costmap_2d(size[0],size[1],resolution, origin_x, origin_y)
-            for i in range(size[0]):
-                for j in range(size[1]):
-                    data = (np.sum(self.init_img[i,j]))/3
-                    self.gridMap.setCost(i,j,data)
-        else:
+        #self.occGridMap = occGridMap()
+
+        self.dimension = dimension
+        origin_x = origin[0]
+        origin_y = origin[1]
+        if dimension == 3:
+            origin_z = origin[2]
+
+        if dimension == 2:
+            if files:
+                self.have_map = True
+                self.init_img = cv2.imread(files)
+                size = self.init_img.shape
+                self.gridMap = costmap_2d(size[0],size[1],resolution, origin_x, origin_y)
+                for i in range(size[0]):
+                    for j in range(size[1]):
+                        data = (np.sum(self.init_img[i,j]))/3
+                        self.gridMap.setCost(i,j,data)
+            else:
+                self.have_map = False
+                self.gridMap = costmap_2d(100,100,resolution, origin_x, origin_y)
+        elif dimension == 3:
             self.have_map = False
-            self.gridMap = costmap_2d(100,100,resolution, origin_x, origin_y)
+            self.gridMap = costmap_3d(100, 100, 100, 0.2, origin_x = -10, origin_y = -10, origin_z = 0)
+            #cells_size_x, cells_size_y, cells_sise_z, resolution, origin_x = 0, origin_y = 0,origin_z = 0, default_value = 0
         self.getTarget = False
     
 
     def update_map_autopark(self,car_pose,target_pose):
-
         #car [6,3]
         #target [8,5]
         p1 = self.move_pose(car_pose,[12,-3])
@@ -87,8 +97,6 @@ class navigation:
                     self.gridMap.setCost(i+m_p6[0],j+m_p6[1],15)
             self.gridMap.drawMap()
 
-        
-
     def move_pose(self,pose,move):
         assert len(pose) == 3
         assert len(move) == 2
@@ -97,6 +105,10 @@ class navigation:
         x = pose[0] + dx
         y = pose[1] + dy
         return [x,y]
+
+    def update_map_3d(self):
+        #todo
+        self.gridMap.drawMap()
     
     def path_planning(self,current_pose,goal_pose):
         startX = current_pose[0]
@@ -178,6 +190,6 @@ class navigation:
         a = 1
     
 
-    def update_map(self, laser, id, pose):
+    def update_map_laser_2d(self, laser, id, pose):
         self.occGridMap.registerScan(pose,id,laser)
         self.occGridMap.drawMap()

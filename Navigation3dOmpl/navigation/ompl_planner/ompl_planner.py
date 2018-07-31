@@ -17,14 +17,15 @@ from RigidBodyPlanningWithODESolverAndControls import RigidBodyPlanningWithODESo
 
 
 class ompl_planner:
-    def __init__(self, costMap, start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw, plannerType, control = True, ODESolver = False):
+    def __init__(self, costMap, dimension, start, start_yaw, goal, goal_yaw, plannerType, control = True, ODESolver = False):
         self.costMap = costMap
-        self.start_x = start_x
-        self.start_y = start_y
+        self.dimension = dimension
+
+        self.start = start
         self.start_yaw = start_yaw
-        self.goal_x = goal_x
-        self.goal_y = goal_y
+        self.goal = goal
         self.goal_yaw = goal_yaw
+
         self.plannerType = plannerType
         self.control = control
         self.ODESolver = ODESolver
@@ -32,14 +33,12 @@ class ompl_planner:
     def setMap(self, costMap):
         self.costMap = costMap
 
-    def setPose(self,start_x, start_y, start_yaw, goal_x, goal_y, goal_yaw):
-        self.start_x = start_x
-        self.start_y = start_y
+    def setPose(self,start, start_yaw, goal, goal_yaw):
+        self.start = start
         self.start_yaw = start_yaw
-        self.goal_x = goal_x
-        self.goal_y = goal_y
+        self.goal = goal
         self.goal_yaw = goal_yaw
-    
+
     def setPlannerType(self, plannerType):
         self.plannerType = plannerType
     
@@ -50,14 +49,17 @@ class ompl_planner:
         self.ODESolver = ODESolver
     
     def omplRunOnce(self, runtime=None):
-        if self.control :
-            if self.ODESolver:
-                planner = RigidBodyPlanningWithODESolverAndControls(self.costMap, self.start_x, self.start_y, self.start_yaw, self.goal_x, self.goal_y, self.goal_yaw, self.plannerType)
+        if self.dimension == 3:
+            planner = RigidBodyPlanning(self.costMap,self.dimension, self.start, self.start_yaw, self.goal, self.goal_yaw, self.plannerType)
+        elif self.dimension == 2:
+            if self.control :
+                if self.ODESolver:
+                    planner = RigidBodyPlanningWithODESolverAndControls(self.costMap, self.dimension, self.start, self.start_yaw, self.goal, self.goal_yaw, self.plannerType)
+                else:
+                    planner = RigidBodyPlanningWithControls(self.costMap, self.dimension, self.start, self.start_yaw, self.goal, self.goal_yaw self.plannerType)
             else:
-                planner = RigidBodyPlanningWithControls(self.costMap, self.start_x, self.start_y, self.start_yaw, self.goal_x, self.goal_y, self.goal_yaw, self.plannerType)
-        else:
-            planner = RigidBodyPlanning(self.costMap, self.start_x, self.start_y, self.start_yaw, self.goal_x, self.goal_y, self.goal_yaw, self.plannerType)
-        
+                planner = RigidBodyPlanning(self.costMap,self.dimension, self.start, self.start_yaw, self.goal, self.goal_yaw, self.plannerType)
+            #costMap, dimension, start, start_yaw, goal, goal_yaw, plannerType
         if not runtime:
             pathlist = planner.solve()
         else:

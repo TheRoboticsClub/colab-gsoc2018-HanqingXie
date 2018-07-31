@@ -29,8 +29,6 @@ class smooth:
             ynew=f(xnew)
             #plt.plot(xnew,ynew,label=str(kind))
             #plt.savefig("figure3.jpg") 
-        
-    
 
     def Floyd(self,pathlist):
         self.pathlist = pathlist

@@ -83,8 +83,8 @@ class costmap_2d:
         return self.resolution_
 
     def getSize(self, min_x, min_y, max_x, max_y):
-        cell_size_x = (int)((max_x, min_x) / self.resolution_)
-        cell_size_y = (int)((max_y, min_y) / self.resolution_)
+        cell_size_x = (int)((max_x - min_x) / self.resolution_)
+        cell_size_y = (int)((max_y - min_y) / self.resolution_)
         return [cell_size_x, cell_size_y]
 
     def mapToWorld(self, mx, my):
