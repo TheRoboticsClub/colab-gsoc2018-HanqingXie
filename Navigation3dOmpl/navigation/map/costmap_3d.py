@@ -294,4 +294,5 @@ class costmap_3d:
         ax = plt.subplot(111, projection='3d')
         ax.scatter(x, y, z, c='b')
         plt.savefig('map_image.png')
+        #plt.show()
 

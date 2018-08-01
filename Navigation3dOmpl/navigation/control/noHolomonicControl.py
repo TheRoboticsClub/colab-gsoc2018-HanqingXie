@@ -24,9 +24,10 @@ class noHolomonicControl:
         return self.pathlist
     
     def setControlYaw(self, controlYaw):
-        self.controlYaw = False
+        #self.controlYaw = False
+        self.controlYaw = controlYaw
 
-    def findTarget(self,Pose):
+    def findTarget(self,Pose,id):
         X = Pose[0]
         Y = Pose[1]
         Yaw = Pose[2]
@@ -57,7 +58,7 @@ class noHolomonicControl:
     def control(self, Pose, id):
         # id = 1, pid
         # id = 2, direct
-        TargetPose = self.findTarget(Pose)
+        TargetPose = self.findTarget(Pose,id)
         num = len(self.pathlist[0])-1
         print ("pose", Pose)
         print ("target", TargetPose)

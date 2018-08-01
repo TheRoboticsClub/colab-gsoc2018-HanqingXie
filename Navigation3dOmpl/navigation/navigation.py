@@ -1,6 +1,7 @@
 
 from ompl_planner.ompl_planner import ompl_planner
-from control.control import noHolomonicControl
+from control.noHolomonicControl import noHolomonicControl
+from control.ardroneControl import ardroneControl
 from path_processing.smoothPath import smooth
 from map.occGridMap import occGridMap,costmap_2d,costmap_3d
 
@@ -14,7 +15,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class navigation:
     def __init__(self, files, origin, resolution, dimension = 2):
-        self.control = noHolomonicControl()
+        
         self.smooth = smooth()
         #self.occGridMap = occGridMap()
 
@@ -25,6 +26,7 @@ class navigation:
             origin_z = origin[2]
 
         if dimension == 2:
+            self.control = noHolomonicControl()
             if files:
                 self.have_map = True
                 self.init_img = cv2.imread(files)
@@ -37,12 +39,15 @@ class navigation:
             else:
                 self.have_map = False
                 self.gridMap = costmap_2d(100,100,resolution, origin_x, origin_y)
-            self.getTarget = False
+
 
         elif dimension == 3:
+            self.control = ardroneControl()
             self.have_map = False
             self.gridMap = costmap_3d(100, 100, 50, 0.2, origin_x = -10, origin_y = -10, origin_z = 0)
             #cells_size_x, cells_size_y, cells_sise_z, resolution, origin_x = 0, origin_y = 0,origin_z = 0, default_value = 0
+        
+        self.getTarget = False
 
     def update_map_autopark(self,car_pose,target_pose):
         #car [6,3]
@@ -198,15 +203,64 @@ class navigation:
             for j in range(ly):
                 for k in range(lz):
                     self.gridMap.setCost(i,j,k,15)
-        wall_box = [0.2, 0.2, 4.0]
-        wall_pose1 = [0, 0, 2]
-        wall_pose2 = [10, 10, 0]
-        wall_pose = []
-        for i,j in zip(wall_pose1, wall_pose2):
-            summ = i+j
-            wall_pose.append(summ)
 
-        self.add_box_map([10,10,1],[0,0,3],[0,0,0])
+        pillar_box = [0.2, 0.2, 4.0]
+        pillar_swell = [0.5, 0.5, 0]
+
+        floor_box = [5,5,0.2]
+        floor_swell = [0.5,0.5,0.5]
+
+        wall1_box = [5,0.2,4]
+        wall2_box = [0.2,5,4]
+        wall_swell = [0.5,0.5,0]
+
+        # pillar_pose = []
+        # floor_pose = []
+        # wall1_pose = []
+        # wall2_pose = []
+        
+        for i in range(5):
+            for j in range(5):
+                x = i*5-10
+                y = j*5-10
+                z = 2
+                #pillar_pose.append([x,y,z])
+                self.add_box_map(pillar_box,[x,y,z],pillar_swell)
+        
+        for i in range(4):
+            for j in range(4):
+                x = i*5-7.5
+                y = j*5-7.5
+                z = 4
+                if (x==2.5 and y==2.5) or (x==-7.5 and y==-2.5):
+                    print ('no floor')
+                else:
+                    #floor_pose.append([x,y,z])
+                    self.add_box_map(floor_box,[x,y,z],floor_swell)
+        
+        for i in range(4):
+            for j in range(2):
+                x = i*5-7.5
+                y = j*20-10
+                z = 6
+                self.add_box_map(wall1_box,[x,y,z],wall_swell)
+
+        for i in range(4):
+            for j in range(2):
+                y = i*5-7.5
+                x = j*20-10
+                z = 6
+                self.add_box_map(wall2_box,[x,y,z],wall_swell)
+
+        wall1_pose = [[7.5,5,6],[-7.5,0,6]]
+        wall2_pose = [[5,2.5,6],[5,-2.5,6],[0,7.5,6],[0,2.5,6],[0,-2.5,6],[-5,-7.5,6]]
+
+        l1 = len(wall1_pose)
+        l2 = len(wall2_pose)
+        for i in range(l1):
+            self.add_box_map(wall1_box,wall1_pose[i],wall_swell)
+        for i in range(l2):
+            self.add_box_map(wall2_box,wall2_pose[i],wall_swell)
 
         self.gridMap.drawMap()
     
@@ -243,12 +297,44 @@ class navigation:
         path_list = ompl_sol.omplRunOnce()
         #print path_list
         if path_list :
-            x = path_list[0]
-            y = path_list[1]
-            z = path_list[2]
+            self.control.setPath(path_list)
+            tmpmap = self.gridMap.getMap()
+            lx = self.gridMap.size_x_
+            ly = self.gridMap.size_y_
+            lz = self.gridMap.size_z_
+
+            x = []
+            y = []
+            z = []
+            d = 0
+            for i in range(lx):
+                for j in range(ly):
+                    for k in range(lz):
+                        if tmpmap[i,j,k] < -5:
+                            tmp = self.gridMap.mapToWorld(i,j,k)
+                            d = d+1
+                            if ( d ==10  ):
+                                x.append(tmp[0])
+                                y.append(tmp[1])
+                                z.append(tmp[2])
+                                d = 0
+                            
+            x2 = path_list[0]
+            y2 = path_list[1]
+            z2 = path_list[2]
             ax = plt.subplot(111, projection='3d')
             ax.scatter(x, y, z, c='b')
+            ax.scatter(x2, y2, z2, c='r')
             plt.show()
             return True
         else:
             return False
+
+    def path_following_3d(self, current_pose):
+        if self.getTarget:
+            print "get Target"
+            print self.control.getPath()
+
+        data = self.control.control(current_pose)
+        self.getTarget = self.control.isGetTarget()
+        return data

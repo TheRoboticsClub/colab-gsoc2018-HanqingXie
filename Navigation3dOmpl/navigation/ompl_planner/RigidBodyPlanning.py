@@ -288,7 +288,6 @@ class RigidBodyPlanning:
 
 if __name__ == "__main__":
     
-    
     planner = RigidBodyPlanning(None, 3, [ 12.40232229232788, 4.982222080230713, 6.667441368103027],0,[ 10, 10, 1],0, 'rrtstar')
     pathlist = planner.solve()
 
