@@ -183,8 +183,8 @@ class RigidBodyPlanning:
         # set the bounds for the R^2 part of SE(2)
         self.bounds = ob.RealVectorBounds(3)
         if not self.costMap:
-            self.bounds.setLow(-10)
-            self.bounds.setHigh(10)
+            self.bounds.setLow(0)
+            self.bounds.setHigh(20)
         else:
             ox = self.costMap.getOriginX()
             oy = self.costMap.getOriginY()
@@ -192,6 +192,8 @@ class RigidBodyPlanning:
             size_x = self.costMap.getSizeInMetersX()
             size_y = self.costMap.getSizeInMetersY()
             size_z = self.costMap.getSizeInMetersZ()
+            print ('o',ox,oy,oz)
+            print ('size',size_x,size_y,size_z)
             low = min(ox, oy, oz)
             high = max(ox+size_x, oy+size_y, oz+size_z)
             print ("low",low)
@@ -239,7 +241,7 @@ class RigidBodyPlanning:
         elif self.plannerType.lower() == "sorrtstar":
             planner = og.SORRTstar(self.si)
         else:
-            OMPL_ERROR("Planner-type is not implemented in allocation function.")
+            print("Planner-type is not implemented in allocation function.")
             planner = og.RRTstar(self.si)
         self.ss.setPlanner(planner)
 
@@ -287,7 +289,7 @@ class RigidBodyPlanning:
 if __name__ == "__main__":
     
     
-    planner = RigidBodyPlanning(None, 3, [0,0,1],0,[5,5,5],0, 'rrtstar')
+    planner = RigidBodyPlanning(None, 3, [ 12.40232229232788, 4.982222080230713, 6.667441368103027],0,[ 10, 10, 1],0, 'rrtstar')
     pathlist = planner.solve()
 
     plt.figure(1)

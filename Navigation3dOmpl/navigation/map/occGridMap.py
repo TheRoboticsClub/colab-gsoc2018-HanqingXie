@@ -128,7 +128,7 @@ class occGridMap:
                         if self.map.costmap_[i,j,k] > 0:
                             x = np.append(x,i)
                             y = np.append(y,j)
-                            z = np.append(z,z)
+                            z = np.append(z,k)
 
             ax = plt.subplot(111, projection='3d')
             ax.scatter(x, y, z, c='b')

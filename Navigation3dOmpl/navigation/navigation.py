@@ -2,13 +2,15 @@
 from ompl_planner.ompl_planner import ompl_planner
 from control.control import noHolomonicControl
 from path_processing.smoothPath import smooth
-from map.occGridMap import occGridMap,costmap_2d
+from map.occGridMap import occGridMap,costmap_2d,costmap_3d
 
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import math
 from math import cos,sin,tan,pow,pi,sqrt
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class navigation:
     def __init__(self, files, origin, resolution, dimension = 2):
@@ -35,12 +37,12 @@ class navigation:
             else:
                 self.have_map = False
                 self.gridMap = costmap_2d(100,100,resolution, origin_x, origin_y)
+            self.getTarget = False
+
         elif dimension == 3:
             self.have_map = False
-            self.gridMap = costmap_3d(100, 100, 100, 0.2, origin_x = -10, origin_y = -10, origin_z = 0)
+            self.gridMap = costmap_3d(100, 100, 50, 0.2, origin_x = -10, origin_y = -10, origin_z = 0)
             #cells_size_x, cells_size_y, cells_sise_z, resolution, origin_x = 0, origin_y = 0,origin_z = 0, default_value = 0
-        self.getTarget = False
-    
 
     def update_map_autopark(self,car_pose,target_pose):
         #car [6,3]
@@ -106,11 +108,7 @@ class navigation:
         y = pose[1] + dy
         return [x,y]
 
-    def update_map_3d(self):
-        #todo
-        self.gridMap.drawMap()
-    
-    def path_planning(self,current_pose,goal_pose):
+    def path_planning_2d(self,current_pose,goal_pose):
         startX = current_pose[0]
         startY = current_pose[1]
         startYaw = current_pose[2]
@@ -139,7 +137,7 @@ class navigation:
         else:
             return False
     
-    def path_smooth(self,path_list,current_pose):
+    def path_smooth_2d(self,path_list,current_pose):
         plt.figure(1)
         plt.plot(path_list[0], path_list[1])
         num = len(path_list[0])
@@ -170,7 +168,7 @@ class navigation:
 
         return path_list
 
-    def path_following(self, current_pose):
+    def path_following_2d(self, current_pose):
         if self.getTarget:
             print "get Target"
             print self.control.getPath()
@@ -185,11 +183,72 @@ class navigation:
         self.getTarget = self.control.isGetTarget()
         return data
 
-    
     def path_check(self,path_smooth, costmap):
-        a = 1
-    
+        print ('todo')
 
     def update_map_laser_2d(self, laser, id, pose):
         self.occGridMap.registerScan(pose,id,laser)
         self.occGridMap.drawMap()
+
+    def update_map_3d(self):
+        lx = self.gridMap.size_x_
+        ly = self.gridMap.size_y_
+        lz = self.gridMap.size_z_
+        for i in range(lx):
+            for j in range(ly):
+                for k in range(lz):
+                    self.gridMap.setCost(i,j,k,15)
+        wall_box = [0.2, 0.2, 4.0]
+        wall_pose1 = [0, 0, 2]
+        wall_pose2 = [10, 10, 0]
+        wall_pose = []
+        for i,j in zip(wall_pose1, wall_pose2):
+            summ = i+j
+            wall_pose.append(summ)
+
+        self.add_box_map([10,10,1],[0,0,3],[0,0,0])
+
+        self.gridMap.drawMap()
+    
+    def add_box_map(self, box, pose, swell):
+        box_sum = []
+        for i,j in zip(box, swell):
+            summ = i+j
+            box_sum.append(summ)
+        
+        start = []
+        for i,j in zip(box_sum, pose):
+            tmp = j - i/2
+            start.append(tmp)
+        
+        cell_size = self.gridMap.getSize(0,0,0,box_sum[0],box_sum[1],box_sum[2])
+        cell_start = self.gridMap.worldToMapEnforceBounds(start[0],start[1],start[2])
+
+        for i in range(cell_size[0]):
+            for j in range(cell_size[1]):
+                for k in range(cell_size[2]):
+                    self.gridMap.setCost(i+cell_start[0], j+cell_start[1], k+cell_start[2], -10)
+
+
+    def path_planning_3d(self,current_pose,goal_pose):
+        startX = current_pose[0]
+        startY = current_pose[1]
+        startZ = current_pose[2]
+        goalX = goal_pose[0]
+        goalY = goal_pose[1]
+        goalZ = goal_pose[2]
+        print ("pose",startX, startY, startZ, goalX, goalY, goalZ)
+
+        ompl_sol = ompl_planner(self.gridMap, 3, current_pose, 0,  goal_pose,  0, "rrtstar", False, False)
+        path_list = ompl_sol.omplRunOnce()
+        #print path_list
+        if path_list :
+            x = path_list[0]
+            y = path_list[1]
+            z = path_list[2]
+            ax = plt.subplot(111, projection='3d')
+            ax.scatter(x, y, z, c='b')
+            plt.show()
+            return True
+        else:
+            return False

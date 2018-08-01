@@ -11,6 +11,8 @@ from parallelIce.cmdvel import CMDVel
 from parallelIce.extra import Extra
 from parallelIce.pose3dClient import Pose3DClient
 
+from navigation.navigation import navigation
+
 time_cycle = 80
 
 class MyAlgorithm(threading.Thread):
@@ -28,6 +30,10 @@ class MyAlgorithm(threading.Thread):
         self.kill_event = threading.Event()
         self.lock = threading.Lock()
         threading.Thread.__init__(self, args=self.stop_event)
+
+        self.navigation = navigation(None,[0,0,0],0.2,3)
+
+        self.find_path = False
 
 
     def run (self):
@@ -67,4 +73,10 @@ class MyAlgorithm(threading.Thread):
         # use: self.pose.getPose3d().x
         #      self.pose.getPose3d().y
         # to get the coordinates of the drone in the x,y plane
-        pass
+        pose_n = [self.pose.getPose3d().x, self.pose.getPose3d().y, self.pose.getPose3d().z]
+        print (pose_n)
+
+        if not self.find_path:
+            goal_pose = [5,5,1]
+            self.navigation.update_map_3d()
+            self.find_path = self.navigation.path_planning_3d(pose_n,goal_pose)

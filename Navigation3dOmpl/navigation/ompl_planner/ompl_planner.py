@@ -56,7 +56,7 @@ class ompl_planner:
                 if self.ODESolver:
                     planner = RigidBodyPlanningWithODESolverAndControls(self.costMap, self.dimension, self.start, self.start_yaw, self.goal, self.goal_yaw, self.plannerType)
                 else:
-                    planner = RigidBodyPlanningWithControls(self.costMap, self.dimension, self.start, self.start_yaw, self.goal, self.goal_yaw self.plannerType)
+                    planner = RigidBodyPlanningWithControls(self.costMap, self.dimension, self.start, self.start_yaw, self.goal, self.goal_yaw, self.plannerType)
             else:
                 planner = RigidBodyPlanning(self.costMap,self.dimension, self.start, self.start_yaw, self.goal, self.goal_yaw, self.plannerType)
             #costMap, dimension, start, start_yaw, goal, goal_yaw, plannerType

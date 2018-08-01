@@ -286,10 +286,10 @@ class costmap_3d:
         for i in range(self.size_x_):
             for j in range(self.size_y_):
                 for k in range(self.size_z_):
-                    if self.costmap_[i,j,k] > 0:
+                    if self.costmap_[i,j,k] < -5:
                         x = np.append(x,i)
                         y = np.append(y,j)
-                        z = np.append(z,z)
+                        z = np.append(z,k)
 
         ax = plt.subplot(111, projection='3d')
         ax.scatter(x, y, z, c='b')
