@@ -1,10 +1,8 @@
-# colab-gsoc2018-HanqingXie
-
-## NavigationOmpl Exercise
+# NavigationOmpl Exercise
 
 The objective of this practice is to learn the use of ompl to implement a local navigation in the taxi.
 
-### How to run
+## How to run
 1. Launch Gazebo with (or without) GUI in one terminal:
  * With GUI
 
@@ -21,10 +19,10 @@ The objective of this practice is to learn the use of ompl to implement a local 
 * REMEMBER: Once running, double click in any point of the map to set destination,
   then click on "Generate Path" and finally click "GO" to see the result.
 
-### How to do the practice
+## How to do the practice
 To carry out the practice, you must edit the MyAlgorithm.py file and insert the control logic into it.
 
-### Where to insert the code
+## Where to insert the code
 [MyAlgorithm.py](MyAlgorithm.py#L70)
 ```
     def execute(self):
@@ -39,7 +37,7 @@ To carry out the practice, you must edit the MyAlgorithm.py file and insert the 
 
 ```
 
-### API
+## API
 * sensor.getRobotX () - to obtain the position of the robot
 * sensor.getRobotY () - to obtain the position of the robot
 * sensor.getRobotTheta () - to obtain the orientation of the robot with respect to the map
@@ -47,7 +45,7 @@ To carry out the practice, you must edit the MyAlgorithm.py file and insert the 
 * vel.setW () - to set the angular velocity
 
 
-### Own API
+## Own API
 This component, is related both to the world and the map. To simplify this, we 
 have a grid object with the following functions:
 * grid.getMap () - returns the image of the map that is being displayed. 

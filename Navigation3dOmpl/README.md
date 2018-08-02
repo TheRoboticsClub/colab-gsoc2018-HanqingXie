@@ -1,11 +1,9 @@
-# colab-gsoc2018-HanqingXie
-
-## Navigation3DOmpl Exercise
+# Navigation3DOmpl Exercise
 
 In this practice we will learn the use of ompl to implement a local navigation algorithm in the quadricopters.
 For this practice a world has been designed for the Gazebo simulator. This world has a 3D model of the AR.Drone and a indoor environment. 
 
-### How to run
+## How to run
 
 1. Copy the inHouse model into jderobot gazebo models
 
@@ -19,10 +17,10 @@ For this practice a world has been designed for the Gazebo simulator. This world
 
 	`$ python2 ./Navigation3dOmpl.py ardrone_conf.yml`
 
-### How to do the practice
+## How to do the practice
 To carry out the practice, you must edit the MyAlgorithm.py file and insert the control logic into it.
 
-### Where to insert the code
+## Where to insert the code
 [MyAlgorithm.py](MyAlgorithm.py#L65)
 ```
     def execute(self):
@@ -37,7 +35,7 @@ To carry out the practice, you must edit the MyAlgorithm.py file and insert the 
         
 ```
 
-### API
+## API
 
 * self.pose.getPose3d().x - returns the position values ​​of the drone in X axis
 * self.pose.getPose3d().y - returns the position values ​​of the drone in Y axis

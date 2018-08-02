@@ -1,10 +1,8 @@
-# colab-gsoc2018-HanqingXie
-
-## Autopark Exercise
+# Autopark Exercise
 
 The goal of this exercise is to implement the logic of a navigation algorithm for an automated vehicle. The vehicle must find a parking space and park properly.
 
-### How to run
+## How to run
 To launch the example, follow the steps below:
 1. Run Gazebo simulator:
   * Execution without seeing the world: 
@@ -25,10 +23,10 @@ To launch the example, follow the steps below:
 
 * To simplify the closure of the environment, just close the Autopark window (s). Ctrl + C will give problems.
 
-### How to do the practice
+## How to do the practice
 To carry out the practice, you must edit the MyAlgorithm.py file and insert the control logic into it.
 
-### Where to insert the code
+## Where to insert the code
 [MyAlgorithm.py](MyAlgorithm.py#L70)
 ```
     def execute(self):
@@ -43,7 +41,7 @@ To carry out the practice, you must edit the MyAlgorithm.py file and insert the 
         
 ```
 
-### API
+## API
 * pose3d.getPose3d().x - to obtain the position of the robot
 * pose3d.getPose3d().y - to obtain the position of the robot
 * pose3d.getPose3d().yaw - to obtain the position of the robot
@@ -53,8 +51,8 @@ To carry out the practice, you must edit the MyAlgorithm.py file and insert the 
 
     For this example, you have to get taxi to park properly in the free parking space. The application of the referee will measure different parameters (time it takes the taxi to park, number of crashes with other cars, distance to vehicles), and based on these, will perform the qualification of the solution algorithm.
 
-### Conversion de tipos
-#### Laser
+## Conversion de tipos
+### Laser
 ```
     laser_data = self.laser.getLaserData()
 
