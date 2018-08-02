@@ -1,31 +1,35 @@
+# colab-gsoc2018-HanqingXie
 
-                        AUTOPARK PRACTICE
-                        =================
+## Autopark Exercise
 
-# Autopark Practice
+The goal of this exercise is to implement the logic of a navigation algorithm for an automated vehicle. The vehicle must find a parking space and park properly.
 
-The goal of this practice is to implement the logic of a navigation algorithm for an automated vehicle. The vehicle must find a parking space and park properly.
-
-## How to run
+### How to run
 To launch the example, follow the steps below:
 1. Run Gazebo simulator:
   * Execution without seeing the world: 
-`$ gzserver autopark.world`
+
+    `$ gzserver autopark.world`
+
   * Execution watching the world: 
-`$ gazebo autopark.world`
+
+    `$ gazebo autopark.world`
+
 2. Running the practice and the user interface: 
-`$ python2 autoparkOmpl.py autopark_conf.yml`
+
+    `$ python2 autoparkOmpl.py autopark_conf.yml`
+
 3. Execution of the automatic evaluator: 
-`$ python2 referee.py referee.yml`
 
-To simplify the closure of the environment, just close the Autopark window (s). Ctrl + C will give problems.
+    `$ python2 referee.py referee.yml`
 
+* To simplify the closure of the environment, just close the Autopark window (s). Ctrl + C will give problems.
 
-## How to do the practice
+### How to do the practice
 To carry out the practice, you must edit the MyAlgorithm.py file and insert the control logic into it.
 
 ### Where to insert the code
-[MyAlgorithm.py](MyAlgorithm.py#L74)
+[MyAlgorithm.py](MyAlgorithm.py#L70)
 ```
     def execute(self):
 
@@ -39,7 +43,6 @@ To carry out the practice, you must edit the MyAlgorithm.py file and insert the 
         
 ```
 
-
 ### API
 * pose3d.getPose3d().x - to obtain the position of the robot
 * pose3d.getPose3d().y - to obtain the position of the robot
@@ -48,9 +51,10 @@ To carry out the practice, you must edit the MyAlgorithm.py file and insert the 
 * motors.sendW() - to set the angular velocity
 * motors.sendV() - to set the linear velocity
 
-For this example, you have to get taxi to park properly in the free parking space. The application of the referee will measure different parameters (time it takes the taxi to park, number of crashes with other cars, distance to vehicles), and based on these, will perform the qualification of the solution algorithm.
-## Conversion de tipos
-### Laser
+    For this example, you have to get taxi to park properly in the free parking space. The application of the referee will measure different parameters (time it takes the taxi to park, number of crashes with other cars, distance to vehicles), and based on these, will perform the qualification of the solution algorithm.
+
+### Conversion de tipos
+#### Laser
 ```
     laser_data = self.laser.getLaserData()
 
@@ -74,7 +78,3 @@ For this example, you have to get taxi to park properly in the free parking spac
 
         laser_mean = np.mean(laser_vectorized, axis=0)
 ```
-
-## Demonstrative video (in spanish)
-https://www.youtube.com/watch?v=2SYEb3DyWEE
-

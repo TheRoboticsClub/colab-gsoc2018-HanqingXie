@@ -1,24 +1,41 @@
-		POSITION CONTROL EXCERSISE
-		==========================
+# colab-gsoc2018-HanqingXie
 
-In this practice we will learn the use of PID controllers to implement a local navigation algorithm in the quadricopters.
-For this practice a world has been designed for the Gazebo simulator. This world has a 3D model of the AR.Drone and 5 beacons arranged in cross mode. The intention is to make the drone do the following route: the first beacon to visit is the one to the left of the drone, the next will be the one in front, then you will have to go to the one that was located to the left of the initial position, then the one in the back, and finally to the one in front, in the most distant position. Finally we will make it return to the initial position and land.
+## Navigation3DOmpl Exercise
 
-///////////////////////////////////////////////////////////////////
- 			E X E C U T I O N 
-///////////////////////////////////////////////////////////////////
+In this practice we will learn the use of ompl to implement a local navigation algorithm in the quadricopters.
+For this practice a world has been designed for the Gazebo simulator. This world has a 3D model of the AR.Drone and a indoor environment. 
 
-Copy the inHouse model into jderobot gazebo models
-$ cp -r inHouse ${CMAKE_INSTALL_PREFIX}/share/jderobot/gazebo/models/
+### How to run
 
-In a terminal launch the gazebo simulator:
-$ gazebo ardrone-inHouse.world
+1. Copy the inHouse model into jderobot gazebo models
 
-In other terminal launch the position_control component with your algorithm:
-$ python2 ./Navigation3dOmpl.py ardrone_conf.yml
+	`$ cp -r ../models/inHouse /root_jderobot/share/jderobot/gazebo/models/`
 
+2. In a terminal launch the gazebo simulator:
 
-///////////////////////////////////////////////////////////////////
+	`$ gazebo ardrone-inHouse.world`
+
+3. In other terminal launch the position_control component with your algorithm:
+
+	`$ python2 ./Navigation3dOmpl.py ardrone_conf.yml`
+
+### How to do the practice
+To carry out the practice, you must edit the MyAlgorithm.py file and insert the control logic into it.
+
+### Where to insert the code
+[MyAlgorithm.py](MyAlgorithm.py#L65)
+```
+    def execute(self):
+
+        # Add your code here
+        print "Runing"
+
+        #EXAMPLE OF HOW TO SEND INFORMATION TO THE ROBOT ACTUATORS
+        #self.motors.sendV(10)
+        #self.motors.sendW(5)
+        # TODO
+        
+```
 
 ### API
 
@@ -28,6 +45,8 @@ $ python2 ./Navigation3dOmpl.py ardrone_conf.yml
 * self.camera.getImage().data: returns the image captured by the active camera of the drone (frontal or ventral).
 * self.cmdvel.setVX(velx): set linear speed of the drone.
 * self.cmdvel.setVY(vely): set linear speed of the drone.
+* self.cmdvel.setVZ(vely): set linear speed of the drone.
+* self.cmdvel.setVYaw(vely): set angular speed of the drone.
 * self.cmdvel.sendVelocities(): send set velocities to the drone.
 * self.cmdvel.sendCMDVel(self,vx,vy,vz,ax,ay,az): sends linear and angular speed commands to the drone.
 * self.extra.toggleCam(): changes the drone's active camera (frontal or the one below).

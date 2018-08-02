@@ -6,11 +6,6 @@ import jderobot
 import math
 import cv2
 from math import pi as pi
-
-from navigation.ompl_planner.ompl_planner import ompl_planner
-from navigation.control.control import noHolomonicControl
-from navigation.path_processing.smoothPath import smooth
-from navigation.map.occGridMap import occGridMap
 from navigation.navigation import navigation
 from navigation.laser.laser_handle import laser_handle
 import matplotlib.pyplot as plt
@@ -38,7 +33,6 @@ class MyAlgorithm(threading.Thread):
 
         self.find_path = False
         self.find_target = False
-        self.buildMap = occGridMap()
         self.laserHandle = laser_handle()
         
 
