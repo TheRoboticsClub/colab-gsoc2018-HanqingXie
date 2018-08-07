@@ -3,7 +3,7 @@ import time
 import math
 
 class noHolomonicControl:
-    def __init__(self):
+    def __init__(self, show = False):
         #self.pathlist = pathlist
         self.find_path = False
         self.PathId = 0
@@ -16,6 +16,22 @@ class noHolomonicControl:
         self.e = [0,0,0]
         self.controlYaw = True
         self.getFinal = False
+        self.show = show
+
+    def restart(self):
+        #self.pathlist = pathlist
+        self.find_path = False
+        self.PathId = 0
+        self.getTarget = False
+        self.v_old = 0
+        self.w_old = 0
+        self.v = 0
+        self.w = 0
+        self.e_old = [0,0,0]
+        self.e = [0,0,0]
+        self.controlYaw = True
+        self.getFinal = False
+        self.show = show
 
     def setPath(self, pathlist):
         self.pathlist = pathlist
@@ -60,8 +76,9 @@ class noHolomonicControl:
         # id = 2, direct
         TargetPose = self.findTarget(Pose,id)
         num = len(self.pathlist[0])-1
-        print ("pose", Pose)
-        print ("target", TargetPose)
+        if self.show:
+            print ("pose", Pose)
+            print ("target", TargetPose)
         if id==1:
             self.e[0] = math.cos(Pose[2])*(TargetPose[0] - Pose[0]) + math.sin(Pose[2])*(TargetPose[1] - Pose[1])
             self.e[1] = -math.sin(Pose[2])*(TargetPose[0] - Pose[0]) + math.cos(Pose[2])*(TargetPose[1] - Pose[1])
@@ -91,9 +108,11 @@ class noHolomonicControl:
                 theta_21 = TargetPose[2] - theta
                 theta_20 = TargetPose[2] - Pose[2]
                 dis = math.sqrt(math.pow((TargetPose[1] - Pose[1]),2)+math.pow((TargetPose[0] - Pose[0]),2))
-                print ("theta_01 ",theta_01)
-                print ("theta_21 ",theta_21)
-                print ("dis ",dis)
+                if self.show:
+                    
+                    print ("theta_01 ",theta_01)
+                    print ("theta_21 ",theta_21)
+                    print ("dis ",dis)
                 if math.fabs(theta_01) > 0.2 and dis > 0.1 and ~self.getFinal:
                     self.v = 0
                     if theta_01 > 0:
@@ -134,7 +153,7 @@ class noHolomonicControl:
                     print ("get target")
                     self.v = 0
                     self.w = 0
-        
-        print ('v, w ', self.v, self.w)
+        if self.show:
+            print ('v, w ', self.v, self.w)
 
         return [self.v, self.w]

@@ -35,6 +35,10 @@ class MyAlgorithm(threading.Thread):
         self.navigation = navigation(None,[0,0,0],0.2,3)
         
         self.find_path = False
+        self.get_point = True
+        #self.goal_point = [[7.5,7.5,1],[-5,-7.5,1],[-7.5,-7.5,5],[-7.5,7.5,5],[7.5,-7.5,5]]
+        self.goal_point = [[7.5, 0 ,6], [7.5,7.5,2],[-7.5, 7.5, 2],[-7.5,7.5,6]]
+        self.num = 0
 
     def run (self):
 
@@ -76,14 +80,22 @@ class MyAlgorithm(threading.Thread):
         pose_n = [self.pose.getPose3d().x, self.pose.getPose3d().y, self.pose.getPose3d().z, self.pose.getPose3d().yaw]
         print (pose_n)
 
-        if not self.find_path:
-            goal_pose = [7.5,7.5,1]
-            self.navigation.update_map_3d()
+        if not self.find_path and self.get_point and self.num < len(self.goal_point):
+            self.cmdvel.setVX(0)
+            self.cmdvel.setVY(0)
+            self.cmdvel.setVZ(0)
+            self.cmdvel.setYaw(0)
+            self.cmdvel.sendVelocities()
+            if self.num == 0:
+                self.navigation.update_map_3d()
+            goal_pose = self.goal_point[self.num]
+            print ("goal", goal_pose)            
             self.find_path = self.navigation.path_planning_3d(pose_n,goal_pose)
-
         else:
-            data = self.navigation.path_following_3d(pose_n)
-
+            [self.get_point, data] = self.navigation.path_following_3d(pose_n)
+            if self.get_point:
+                self.find_path = False
+                self.num += 1
             self.cmdvel.setVX(data[0])
             self.cmdvel.setVY(data[1])
             self.cmdvel.setVZ(data[2])

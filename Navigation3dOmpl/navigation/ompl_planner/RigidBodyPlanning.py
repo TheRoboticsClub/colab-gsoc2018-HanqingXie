@@ -198,8 +198,12 @@ class RigidBodyPlanning:
             high = max(ox+size_x, oy+size_y, oz+size_z)
             print ("low",low)
             print ("high",high)
-            self.bounds.setLow(low)
-            self.bounds.setHigh(high)
+            self.bounds.setLow(0,ox)
+            self.bounds.setLow(1,oy)
+            self.bounds.setLow(2,oz)
+            self.bounds.setHigh(0,ox+size_x)
+            self.bounds.setHigh(1,oy+size_y)
+            self.bounds.setHigh(2,oz+size_z)
         self.space.setBounds(self.bounds)
 
         # define a simple setup class

@@ -3,9 +3,15 @@ import time
 import math
 
 class ardroneControl:
-    def __init__(self):
+    def __init__(self, show = False):
         #self.pathlist = pathlist
-        self.find_path = False
+        self.getTarget = False
+        self.controlYaw = False
+        self.getFinal = False
+        self.show = show
+        self.PathId = 0
+
+    def restart(self):
         self.getTarget = False
         self.controlYaw = False
         self.getFinal = False
@@ -53,8 +59,9 @@ class ardroneControl:
         # id = 1, pid
         # id = 2, direct
         TargetPose = self.findTarget(Pose)
-        print ("pose", Pose)
-        print ("target", TargetPose)
+        if self.show:
+            print ("pose", Pose)
+            print ("target", TargetPose)
         
         vx = TargetPose[0] - Pose[0]
         vy = TargetPose[1] - Pose[1]
@@ -66,7 +73,8 @@ class ardroneControl:
         vz = self.limiting(vz, 1, -1)
         az = self.limiting(az, 1, -1)
 
-        print("v", vx,vy,vz,az)
+        if self.show:
+            print("v", vx,vy,vz,az)
 
         return [vx,vy,vz,az]
 

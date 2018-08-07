@@ -205,14 +205,14 @@ class navigation:
                     self.gridMap.setCost(i,j,k,15)
 
         pillar_box = [0.2, 0.2, 4.0]
-        pillar_swell = [0.5, 0.5, 0]
+        pillar_swell = [1, 1, 0]
 
         floor_box = [5,5,0.2]
-        floor_swell = [0.5,0.5,0.5]
+        floor_swell = [1,1,1]
 
-        wall1_box = [5,0.2,4]
-        wall2_box = [0.2,5,4]
-        wall_swell = [0.5,0.5,0]
+        wall1_box = [5,0.2,5]
+        wall2_box = [0.2,5,5]
+        wall_swell = [1,1,0]
 
         # pillar_pose = []
         # floor_pose = []
@@ -242,18 +242,18 @@ class navigation:
             for j in range(2):
                 x = i*5-7.5
                 y = j*20-10
-                z = 6
+                z = 6.5
                 self.add_box_map(wall1_box,[x,y,z],wall_swell)
 
         for i in range(4):
             for j in range(2):
                 y = i*5-7.5
                 x = j*20-10
-                z = 6
+                z = 6.5
                 self.add_box_map(wall2_box,[x,y,z],wall_swell)
 
-        wall1_pose = [[7.5,5,6],[-7.5,0,6]]
-        wall2_pose = [[5,2.5,6],[5,-2.5,6],[0,7.5,6],[0,2.5,6],[0,-2.5,6],[-5,-7.5,6]]
+        wall1_pose = [[7.5,5,6.5],[-7.5,0,6.5]]
+        wall2_pose = [[5,2.5,6.5],[5,-2.5,6.5],[0,7.5,6.5],[0,2.5,6.5],[0,-2.5,6.5],[-5,-7.5,6.5]]
 
         l1 = len(wall1_pose)
         l2 = len(wall2_pose)
@@ -292,11 +292,12 @@ class navigation:
         goalY = goal_pose[1]
         goalZ = goal_pose[2]
         print ("pose",startX, startY, startZ, goalX, goalY, goalZ)
-
-        ompl_sol = ompl_planner(self.gridMap, 3, current_pose, 0,  goal_pose,  0, "rrtstar", False, False)
-        path_list = ompl_sol.omplRunOnce()
+        #bitstar rrtstar fmtstar
+        ompl_sol = ompl_planner(self.gridMap, 3, current_pose, 0,  goal_pose,  0, "fmtstar", False, False)
+        path_list = ompl_sol.omplRunOnce(10)
         #print path_list
         if path_list :
+            self.control.restart()
             self.control.setPath(path_list)
             tmpmap = self.gridMap.getMap()
             lx = self.gridMap.size_x_
@@ -337,4 +338,4 @@ class navigation:
 
         data = self.control.control(current_pose)
         self.getTarget = self.control.isGetTarget()
-        return data
+        return [self.getTarget,data]
